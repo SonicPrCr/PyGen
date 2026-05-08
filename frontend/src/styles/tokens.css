@@ -1,0 +1,39 @@
+/*
+ * PyGen Design Tokens — цветовая палитра
+ * Тёмная тема (единственная тема платформы)
+ *
+ * Использование: var(--color-bg-primary)
+ */
+
+:root {
+  /* Фоны */
+  --color-bg-primary: #0D0B14;      /* Основной фон — почти чёрный с фиолетовым оттенком */
+  --color-bg-secondary: #1A1626;    /* Фон карточек/сайдбара — чуть светлее */
+  --color-bg-tertiary: #241E35;     /* Третий уровень — бордюры, разделители */
+
+  /* Акценты */
+  --color-accent-purple: #7C3AED;   /* Фиолетовый — основной акцент, прогрессбары */
+  --color-accent-purple-light: #A855F7; /* Светлее — hover-состояния */
+  --color-accent-yellow: #F59E0B;   /* Жёлтый — главные кнопки CTA, звёзды, XP */
+  --color-accent-yellow-light: #FCD34D; /* Светлее для hover */
+
+  /* Текст */
+  --color-text-primary: #F8F6FF;    /* Основной текст — почти белый */
+  --color-text-secondary: #C4BFDE; /* Второстепенный текст */
+  --color-text-muted: #8B88A0;      /* Мутный текст — подписи, плейсхолдеры */
+
+  /* Статусы */
+  --color-success: #22C55E;         /* Зелёный — правильный ответ */
+  --color-error: #EF4444;           /* Красный — ошибка */
+  --color-warning: #F59E0B;         /* Жёлтый — предупреждение */
+
+  /* Границы */
+  --color-border: #2D2640;          /* Цвет обводки карточек */
+  --color-border-muted: #1F1B2E;    /* Тонкий разделитель */
+
+  /* Радиусы */
+  --radius-card: 12px;
+  --radius-button: 8px;
+  --radius-input: 8px;
+  --radius-badge: 6px;
+}
