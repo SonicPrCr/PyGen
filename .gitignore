@@ -52,3 +52,8 @@ yarn-error.log*
 # ==============================
 .DS_Store
 Thumbs.db
+
+.figma-links.md
+.design/
+.landing/
+

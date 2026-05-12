@@ -6,30 +6,30 @@
  */
 
 :root {
-  /* Фоны */
-  --color-bg-primary: #0D0B14;      /* Основной фон — почти чёрный с фиолетовым оттенком */
-  --color-bg-secondary: #1A1626;    /* Фон карточек/сайдбара — чуть светлее */
-  --color-bg-tertiary: #241E35;     /* Третий уровень — бордюры, разделители */
+  /* Фоны — из Figma (#0C0827 основной) */
+  --color-bg-primary: #0C0827;
+  --color-bg-secondary: #1A1537;
+  --color-bg-tertiary: #241E45;
 
-  /* Акценты */
-  --color-accent-purple: #7C3AED;   /* Фиолетовый — основной акцент, прогрессбары */
-  --color-accent-purple-light: #A855F7; /* Светлее — hover-состояния */
-  --color-accent-yellow: #F59E0B;   /* Жёлтый — главные кнопки CTA, звёзды, XP */
-  --color-accent-yellow-light: #FCD34D; /* Светлее для hover */
+  /* Акценты — из Figma */
+  --color-accent-purple: #695EB0;
+  --color-accent-purple-light: #8B7FCC;
+  --color-accent-yellow: #FFDB3A;
+  --color-accent-yellow-light: #FFE870;
 
   /* Текст */
-  --color-text-primary: #F8F6FF;    /* Основной текст — почти белый */
-  --color-text-secondary: #C4BFDE; /* Второстепенный текст */
-  --color-text-muted: #8B88A0;      /* Мутный текст — подписи, плейсхолдеры */
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #C4BFDE;
+  --color-text-muted: #8B88A0;
 
   /* Статусы */
-  --color-success: #22C55E;         /* Зелёный — правильный ответ */
-  --color-error: #EF4444;           /* Красный — ошибка */
-  --color-warning: #F59E0B;         /* Жёлтый — предупреждение */
+  --color-success: #22C55E;
+  --color-error: #EF4444;
+  --color-warning: #FFDB3A;
 
   /* Границы */
-  --color-border: #2D2640;          /* Цвет обводки карточек */
-  --color-border-muted: #1F1B2E;    /* Тонкий разделитель */
+  --color-border: #2D2645;
+  --color-border-muted: #1F1B35;
 
   /* Радиусы */
   --radius-card: 12px;
