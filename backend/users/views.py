@@ -3,8 +3,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import authenticate
-from drf_spectacular.utils import extend_schema
+from rest_framework_simplejwt.exceptions import TokenError
+from drf_spectacular.utils import extend_schema, OpenApiExample
+from drf_spectacular.openapi import OpenApiTypes
 
 from .models import User
 from .serializers import UserSerializer, RegisterSerializer
@@ -36,22 +37,37 @@ class LoginView(APIView):
     permission_classes = [AllowAny]
 
     @extend_schema(
-        summary='Вход (получить JWT-токены)',
+        summary='Вход по email и паролю (получить JWT-токены)',
         request={'application/json': {'type': 'object', 'properties': {
-            'username': {'type': 'string'},
+            'email': {'type': 'string', 'format': 'email'},
             'password': {'type': 'string'},
-        }}},
+        }, 'required': ['email', 'password']}},
         responses={200: UserSerializer},
     )
     def post(self, request):
-        username = request.data.get('username')
-        password = request.data.get('password')
-        user = authenticate(username=username, password=password)
-        if not user:
+        email = request.data.get('email', '').strip()
+        password = request.data.get('password', '')
+
+        if not email or not password:
             return Response(
-                {'error': 'Неверный логин или пароль'},
-                status=status.HTTP_401_UNAUTHORIZED
+                {'error': 'Укажите email и пароль'},
+                status=status.HTTP_400_BAD_REQUEST,
             )
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response(
+                {'error': 'Неверный email или пароль'},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        if not user.check_password(password):
+            return Response(
+                {'error': 'Неверный email или пароль'},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
         refresh = RefreshToken.for_user(user)
         return Response({
             'user': UserSerializer(user).data,
@@ -60,6 +76,29 @@ class LoginView(APIView):
                 'access': str(refresh.access_token),
             }
         })
+
+
+class TokenRefreshView(APIView):
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        summary='Обновить access-токен по refresh-токену',
+        request={'application/json': {'type': 'object', 'properties': {
+            'refresh': {'type': 'string'},
+        }, 'required': ['refresh']}},
+    )
+    def post(self, request):
+        refresh_token = request.data.get('refresh')
+        if not refresh_token:
+            return Response(
+                {'error': 'Укажите refresh-токен'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            refresh = RefreshToken(refresh_token)
+            return Response({'access': str(refresh.access_token)})
+        except TokenError as e:
+            return Response({'error': str(e)}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 class MeView(APIView):

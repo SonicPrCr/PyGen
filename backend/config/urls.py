@@ -7,14 +7,25 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # Auth-эндпоинты
+    # Аутентификация
     path('api/auth/', include('users.urls')),
 
+    # Уроки и темы
+    path('api/', include('lessons.urls')),
+
+    # Задания
+    path('api/', include('tasks.urls')),
+
+    # Контент (закладки, конспекты, справочник)
+    path('api/', include('content.urls')),
+
+    # Ачивки
+    path('api/', include('achievements.urls')),
+
     # Документация API (Swagger)
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/schema/',        SpectacularAPIView.as_view(),                            name='schema'),
+    path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'),  name='swagger-ui'),
 ]
 
-# В режиме разработки отдаём загруженные файлы (аватарки)
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
