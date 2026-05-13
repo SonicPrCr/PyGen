@@ -117,7 +117,6 @@ export default function TopicLessonsPage({
                 <LessonCard
                   key={lesson.id}
                   lesson={lesson}
-                  topicId={theme.id}
                   isLocked={isLocked(idx)}
                 />
               ))}

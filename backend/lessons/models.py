@@ -23,7 +23,6 @@ class Lesson(models.Model):
     LESSON_TYPES = [
         ('theory',   'Теория'),
         ('practice', 'Практика'),
-        ('test',     'Тест'),
     ]
 
     theme        = models.ForeignKey(Theme, on_delete=models.CASCADE, related_name='lessons')

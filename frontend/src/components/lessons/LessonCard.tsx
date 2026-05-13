@@ -4,7 +4,7 @@ export interface Lesson {
   id: number;
   title: string;
   order: number;
-  lesson_type: "theory" | "practice" | "test";
+  lesson_type: "theory" | "practice";
   xp_reward: number;
   stars_reward: number;
   is_completed: boolean;
@@ -13,34 +13,33 @@ export interface Lesson {
 
 interface LessonCardProps {
   lesson: Lesson;
-  topicId: number;
   isLocked: boolean;
+}
+
+function lessonUrl(lesson: Lesson): string {
+  return lesson.lesson_type === "practice"
+    ? `/lessons/${lesson.id}/editor`
+    : `/lessons/${lesson.id}`;
 }
 
 const TYPE_ICON: Record<Lesson["lesson_type"], string> = {
   theory:   "≡",
   practice: "</>",
-  test:     "✎",
 };
 
 const TYPE_LABEL: Record<Lesson["lesson_type"], string> = {
   theory:   "Перейти к уроку",
   practice: "Перейти к заданию",
-  test:     "Перейти к тесту",
 };
 
-export function LessonCard({ lesson, topicId, isLocked }: LessonCardProps) {
+export function LessonCard({ lesson, isLocked }: LessonCardProps) {
   const statusIcon = lesson.is_completed
     ? { symbol: "✓", color: "#4ADE80" }
     : isLocked
     ? { symbol: "🔒", color: "rgba(255,255,255,0.3)" }
     : { symbol: TYPE_ICON[lesson.lesson_type], color: "rgba(255,255,255,0.5)" };
 
-  const progressPct = lesson.is_completed
-    ? 100
-    : isLocked
-    ? 0
-    : 0;
+  const progressPct = lesson.is_completed ? 100 : 0;
 
   const card = (
     <div
@@ -92,8 +91,7 @@ export function LessonCard({ lesson, topicId, isLocked }: LessonCardProps) {
       </div>
 
       {/* Bottom: button */}
-      <div className="flex justify-between items-center">
-        <div />
+      <div className="flex justify-end">
         {isLocked ? (
           <span className="text-xs text-white/25 px-4 py-2 rounded-xl border border-white/10">
             Заблокировано
@@ -116,7 +114,7 @@ export function LessonCard({ lesson, topicId, isLocked }: LessonCardProps) {
   if (isLocked) return <div className="cursor-not-allowed">{card}</div>;
 
   return (
-    <Link href={`/topics/${topicId}/lessons/${lesson.id}`} className="block hover:scale-[1.005] transition-transform">
+    <Link href={lessonUrl(lesson)} className="block hover:scale-[1.005] transition-transform">
       {card}
     </Link>
   );

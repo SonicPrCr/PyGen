@@ -35,7 +35,15 @@ const MENU_ITEMS = [
 ];
 
 // ─── Компонент ───────────────────────────────────────────────────────────────
-export function Header() {
+export function Header({
+  showBurger = false,
+  fullWidth = false,
+  logoSrc,
+}: {
+  showBurger?: boolean;
+  fullWidth?: boolean;
+  logoSrc?: string;
+}) {
   const { isAuthenticated, user, logout, openLogin, openRegister } = useAuthStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -65,21 +73,37 @@ export function Header() {
     <>
       {/* ── Хедер ──────────────────────────────────────────────────────────── */}
       <header
-        className="w-full px-4 sm:px-6 lg:px-16 py-5 sm:py-6 lg:py-8"
-        style={{ backgroundColor: "var(--color-bg-primary)" }}
+        className={`w-full ${fullWidth ? "px-4 sm:px-6" : "px-4 sm:px-6 lg:px-16"} py-4 sm:py-5 lg:py-6`}
+        style={{
+          backgroundColor: "var(--color-bg-primary)",
+          borderBottom: fullWidth ? "1px solid rgba(255,255,255,0.08)" : "none",
+        }}
       >
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        {/* Логотип */}
-        <Link href="/" className="flex items-center shrink-0">
-          <Image
-            src="/images/landing/logo.png"
-            alt="PyGen"
-            width={200}
-            height={80}
-            priority
-            className="w-[58px] h-[78px] sm:w-auto sm:h-14 lg:h-20 object-contain"
-          />
-        </Link>
+      <div className={`${fullWidth ? "w-full" : "max-w-7xl mx-auto"} flex items-center justify-between`}>
+        {/* Логотип (+ бургер если showBurger) */}
+        <div className="flex items-center gap-3 shrink-0">
+          {showBurger && (
+            <button
+              onClick={() => console.log("TODO: collapse sidebar")}
+              className="w-10 h-10 flex flex-col items-center justify-center gap-1.5 rounded-lg hover:bg-white/10 transition-colors"
+              aria-label="Меню"
+            >
+              <span className="block w-5 h-0.5 rounded-full bg-white" />
+              <span className="block w-5 h-0.5 rounded-full bg-white" />
+              <span className="block w-5 h-0.5 rounded-full bg-white" />
+            </button>
+          )}
+          <Link href="/" className="flex items-center shrink-0">
+            <Image
+              src={logoSrc ?? "/images/landing/logo.png"}
+              alt="PyGen"
+              width={200}
+              height={80}
+              priority
+              className={fullWidth ? "h-9 w-auto object-contain" : "w-[58px] h-[78px] sm:w-auto sm:h-14 lg:h-20 object-contain"}
+            />
+          </Link>
+        </div>
 
         {/* ── Правая часть хедера ─────────────────────────────────────────── */}
         {isAuthenticated ? (

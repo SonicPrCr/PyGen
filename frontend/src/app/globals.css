@@ -3,6 +3,9 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "../styles/tokens.css";
+@import "highlight.js/styles/github-dark.css";
+
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -72,6 +75,27 @@
   --sidebar-accent-foreground: #C4BFDE;
   --sidebar-border: #2D2645;
   --sidebar-ring: #695EB0;
+}
+
+/* Lesson markdown: fix prose overriding highlight.js colors */
+.prose pre {
+  background-color: #161b22 !important;
+  padding: 0 !important;
+}
+.prose pre code {
+  background: transparent !important;
+  color: inherit !important;
+  padding: 0 !important;
+}
+.prose :where(code):not(pre code) {
+  background-color: rgba(105,94,176,0.2) !important;
+  color: #e2c4ff !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+}
+.prose :where(code):not(pre code)::before,
+.prose :where(code):not(pre code)::after {
+  content: "" !important;
 }
 
 @layer base {

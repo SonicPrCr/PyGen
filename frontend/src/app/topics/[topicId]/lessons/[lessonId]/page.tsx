@@ -1,13 +1,10 @@
-export default function LessonPage({
+import { redirect } from "next/navigation";
+
+export default async function OldLessonPage({
   params,
 }: {
-  params: Promise<{ topicId: string; lessonId: string }>;
+  params: Promise<{ lessonId: string }>;
 }) {
-  return (
-    <div className="flex items-center justify-center min-h-[70vh]">
-      <h1 className="text-2xl font-semibold" style={{ color: "var(--color-text-primary)" }}>
-        Урок / Редактор кода — скоро здесь
-      </h1>
-    </div>
-  );
+  const { lessonId } = await params;
+  redirect(`/lessons/${lessonId}`);
 }
