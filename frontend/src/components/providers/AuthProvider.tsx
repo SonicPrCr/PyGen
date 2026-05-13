@@ -1,0 +1,20 @@
+"use client";
+
+import { useEffect } from "react";
+import { useAuthStore } from "@/lib/stores/authStore";
+import { AuthModal } from "@/components/auth/AuthModal";
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const fetchMe = useAuthStore((s) => s.fetchMe);
+
+  useEffect(() => {
+    fetchMe();
+  }, [fetchMe]);
+
+  return (
+    <>
+      {children}
+      <AuthModal />
+    </>
+  );
+}

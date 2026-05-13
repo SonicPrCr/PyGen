@@ -70,6 +70,8 @@ class ThemeListSerializer(serializers.ModelSerializer):
     progress_percent       = serializers.SerializerMethodField()
     completed_lessons_count = serializers.SerializerMethodField()
     total_lessons_count    = serializers.SerializerMethodField()
+    total_xp               = serializers.SerializerMethodField()
+    total_stars            = serializers.SerializerMethodField()
 
     class Meta:
         model = Theme
@@ -77,6 +79,7 @@ class ThemeListSerializer(serializers.ModelSerializer):
             'id', 'title', 'description', 'order', 'icon_url',
             'is_locked', 'progress_percent',
             'completed_lessons_count', 'total_lessons_count',
+            'total_xp', 'total_stars',
         ]
 
     def _stats(self, obj):
@@ -104,6 +107,14 @@ class ThemeListSerializer(serializers.ModelSerializer):
     def get_progress_percent(self, obj):
         total, completed = self._stats(obj)
         return round(completed / total * 100) if total else 0
+
+    def get_total_xp(self, obj):
+        from django.db.models import Sum
+        return obj.lessons.aggregate(total=Sum('xp_reward'))['total'] or 0
+
+    def get_total_stars(self, obj):
+        from django.db.models import Sum
+        return obj.lessons.aggregate(total=Sum('stars_reward'))['total'] or 0
 
     def get_is_locked(self, obj):
         # Первая тема всегда открыта

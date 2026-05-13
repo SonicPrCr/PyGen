@@ -11,6 +11,7 @@ interface BtnProps {
   className?: string;
   onClick?: () => void;
   type?: "button" | "submit" | "reset";
+  disabled?: boolean;
 }
 
 const STYLES: Record<Variant, { className: string; style: React.CSSProperties }> = {
@@ -41,9 +42,10 @@ export function Btn({
   className = "",
   onClick,
   type = "button",
+  disabled = false,
 }: BtnProps) {
   const { className: base, style } = STYLES[variant];
-  const fullClass = `${base}${fullWidthMobile ? " w-full sm:w-auto" : ""}${className ? ` ${className}` : ""}`;
+  const fullClass = `${base}${fullWidthMobile ? " w-full sm:w-auto" : ""}${className ? ` ${className}` : ""} disabled:opacity-50 disabled:cursor-not-allowed`;
 
   if (href) {
     return (
@@ -54,7 +56,7 @@ export function Btn({
   }
 
   return (
-    <button type={type} onClick={onClick} className={fullClass} style={style}>
+    <button type={type} onClick={onClick} disabled={disabled} className={fullClass} style={style}>
       {children}
     </button>
   );

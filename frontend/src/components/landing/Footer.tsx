@@ -18,7 +18,7 @@ const SOCIALS = [
 export function Footer() {
   return (
     <footer
-      className="px-5 sm:px-10 lg:px-32 py-12 sm:py-14 lg:py-16"
+      className="px-4 sm:px-6 lg:px-16 py-12 sm:py-14 lg:py-16"
       style={{ backgroundColor: "var(--color-bg-primary)" }}
     >
       <div className="max-w-7xl mx-auto">

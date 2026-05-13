@@ -1,15 +1,22 @@
 from rest_framework import serializers
 from .models import User
+from achievements.models import Achievement
 
 
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для отдачи данных пользователя (без пароля)."""
+    current_level_color = serializers.SerializerMethodField()
+
+    def get_current_level_color(self, obj):
+        ach = Achievement.objects.filter(level=obj.current_level).first()
+        return ach.color if ach else '#695EB0'
+
     class Meta:
         model = User
         fields = [
             'id', 'username', 'email',
             'first_name', 'last_name', 'middle_name',
-            'age', 'avatar', 'xp', 'current_level', 'total_stars',
+            'age', 'avatar', 'xp', 'current_level', 'current_level_color', 'total_stars',
         ]
         read_only_fields = ['id', 'xp', 'current_level', 'total_stars']
 

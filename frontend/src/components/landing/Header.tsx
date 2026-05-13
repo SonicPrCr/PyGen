@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Btn } from "@/components/Btn";
+import { useAuthStore } from "@/lib/stores/authStore";
 
 // ─── Пункты дропдаун-меню ────────────────────────────────────────────────────
 const MENU_ITEMS = [
@@ -35,9 +36,14 @@ const MENU_ITEMS = [
 
 // ─── Компонент ───────────────────────────────────────────────────────────────
 export function Header() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { isAuthenticated, user, logout, openLogin, openRegister } = useAuthStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const avatarLetter =
+    user?.first_name?.[0]?.toUpperCase() ||
+    user?.email?.[0]?.toUpperCase() ||
+    "U";
 
   // Закрыть меню при клике вне (только десктоп/планшет)
   useEffect(() => {
@@ -59,9 +65,10 @@ export function Header() {
     <>
       {/* ── Хедер ──────────────────────────────────────────────────────────── */}
       <header
-        className="w-full px-5 sm:px-10 lg:px-32 py-5 sm:py-6 lg:py-8 flex items-center justify-between"
+        className="w-full px-4 sm:px-6 lg:px-16 py-5 sm:py-6 lg:py-8"
         style={{ backgroundColor: "var(--color-bg-primary)" }}
       >
+      <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Логотип */}
         <Link href="/" className="flex items-center shrink-0">
           <Image
@@ -70,13 +77,13 @@ export function Header() {
             width={200}
             height={80}
             priority
-            className="h-12 sm:h-14 lg:h-20 w-auto object-contain"
+            className="w-[58px] h-[78px] sm:w-auto sm:h-14 lg:h-20 object-contain"
           />
         </Link>
 
         {/* ── Правая часть хедера ─────────────────────────────────────────── */}
         {isAuthenticated ? (
-          /* Авторизован — кружок "U" с дропдауном */
+          /* Авторизован — кружок с буквой и дропдауном */
           <div className="relative" ref={menuRef}>
             <button
               onClick={() => setIsMenuOpen((v) => !v)}
@@ -86,13 +93,10 @@ export function Header() {
             >
               <span
                 className="w-10 h-10 rounded-full border-2 flex items-center justify-center"
-                style={{
-                  borderColor: "#FFFFFF",
-                  backgroundColor: "transparent",
-                }}
+                style={{ borderColor: "#FFFFFF", backgroundColor: "transparent" }}
               >
                 <span className="text-white font-bold text-base leading-none">
-                  U
+                  {avatarLetter}
                 </span>
               </span>
               <img
@@ -125,9 +129,7 @@ export function Header() {
                     onClick={() => setIsMenuOpen(false)}
                     className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-gray-100"
                     style={{
-                      backgroundColor: item.highlight
-                        ? "#F5F5F5"
-                        : "transparent",
+                      backgroundColor: item.highlight ? "#F5F5F5" : "transparent",
                     }}
                   >
                     <img
@@ -142,14 +144,10 @@ export function Header() {
                     </span>
                   </Link>
                 ))}
-                {/* Разделитель */}
-                <div
-                  className="h-px mx-4"
-                  style={{ backgroundColor: "#E5E7EB" }}
-                />
+                <div className="h-px mx-4" style={{ backgroundColor: "#E5E7EB" }} />
                 <button
                   className="flex items-center gap-3 px-4 py-3 w-full text-left transition-colors hover:bg-gray-100"
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={() => { logout(); setIsMenuOpen(false); }}
                 >
                   <img
                     src="/images/landing/icon-exit.svg"
@@ -166,18 +164,19 @@ export function Header() {
             )}
           </div>
         ) : (
-          /* Не авторизован — ссылка "Войти" + кнопка "Регистрация" */
+          /* Не авторизован — "Войти" + "Регистрация" */
           <div className="flex items-center gap-3 sm:gap-5">
-            <Link
-              href="/login"
+            <button
+              onClick={openLogin}
               className="text-sm sm:text-base font-medium hover:opacity-80 transition-opacity"
               style={{ color: "#FFFFFF" }}
             >
               Войти
-            </Link>
-            <Btn href="/register" variant="outline">Регистрация</Btn>
+            </button>
+            <Btn onClick={openRegister} variant="outline">Регистрация</Btn>
           </div>
         )}
+      </div>
       </header>
 
       {/* ── Мобильное меню — полная ширина под хедером (<sm) ───────────────── */}
@@ -207,19 +206,16 @@ export function Header() {
                 aria-hidden
                 style={{ filter: "brightness(0) invert(1)", opacity: 0.8 }}
               />
-              <span className="text-sm font-medium text-white">
-                {item.label}
-              </span>
+              <span className="text-sm font-medium text-white">{item.label}</span>
             </Link>
           ))}
-          {/* Разделитель */}
           <div
             className="mx-5"
             style={{ height: "1px", backgroundColor: "rgba(255,255,255,0.12)" }}
           />
           <button
             className="flex items-center gap-4 px-5 py-4 w-full transition-colors hover:bg-white/5"
-            onClick={() => setIsMenuOpen(false)}
+            onClick={() => { logout(); setIsMenuOpen(false); }}
           >
             <img
               src="/images/landing/icon-exit.svg"
@@ -231,36 +227,6 @@ export function Header() {
             />
             <span className="text-sm font-medium text-white">Выйти</span>
           </button>
-        </div>
-      )}
-
-      {/* ── Dev-панель (только в разработке) ───────────────────────────────── */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="fixed bottom-4 left-4 z-[999] flex flex-col gap-2">
-          <button
-            onClick={() => setIsAuthenticated((v) => !v)}
-            className="px-3 py-1.5 text-xs rounded-lg border font-mono shadow-lg"
-            style={{
-              backgroundColor: "#1A1A2E",
-              color: isAuthenticated ? "#FBBF24" : "#9CA3AF",
-              borderColor: isAuthenticated ? "#FBBF24" : "#374151",
-            }}
-          >
-            {isAuthenticated ? "✓ Авторизован" : "✗ Не авторизован"}
-          </button>
-          {isAuthenticated && (
-            <button
-              onClick={() => setIsMenuOpen((v) => !v)}
-              className="px-3 py-1.5 text-xs rounded-lg border font-mono shadow-lg"
-              style={{
-                backgroundColor: "#1A1A2E",
-                color: isMenuOpen ? "#FBBF24" : "#9CA3AF",
-                borderColor: isMenuOpen ? "#FBBF24" : "#374151",
-              }}
-            >
-              {isMenuOpen ? "▲ Меню открыто" : "▼ Меню закрыто"}
-            </button>
-          )}
         </div>
       )}
     </>
