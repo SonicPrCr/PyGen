@@ -53,6 +53,13 @@ export function Header({
     user?.email?.[0]?.toUpperCase() ||
     "U";
 
+  const menuItems = [
+    ...MENU_ITEMS,
+    ...(user?.is_staff
+      ? [{ icon: "/images/landing/icon-courses.svg", w: 16, h: 20, label: "Администрирование", href: "/admin", highlight: false }]
+      : []),
+  ];
+
   // Закрыть меню при клике вне (только десктоп/планшет)
   useEffect(() => {
     function onOutside(e: MouseEvent) {
@@ -146,7 +153,7 @@ export function Header({
                   boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
                 }}
               >
-                {MENU_ITEMS.map((item) => (
+                {menuItems.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
@@ -209,7 +216,7 @@ export function Header({
           className="sm:hidden w-full z-40"
           style={{ backgroundColor: "#160D35" }}
         >
-          {MENU_ITEMS.map((item, i) => (
+          {menuItems.map((item, i) => (
             <Link
               key={item.href}
               href={item.href}

@@ -6,7 +6,7 @@ class Theme(models.Model):
     title       = models.CharField('Название', max_length=200)
     description = models.TextField('Описание', blank=True)
     order       = models.PositiveIntegerField('Порядок', unique=True)
-    icon_url    = models.CharField('Иконка', max_length=500, blank=True)
+    icon        = models.ImageField('Иконка', upload_to='theme_icons/', blank=True, null=True)
     created_at  = models.DateTimeField(auto_now_add=True)
     updated_at  = models.DateTimeField(auto_now=True)
 

@@ -1,12 +1,13 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from drf_spectacular.utils import extend_schema
 
 from .models import Bookmark, Note, ReferenceCategory, ReferenceArticle
 from .serializers import (
     BookmarkSerializer, NoteSerializer,
     ReferenceCategorySerializer, ReferenceArticleSerializer,
+    ReferenceArticleAdminSerializer,
 )
 
 
@@ -60,3 +61,29 @@ class ReferenceArticleDetailView(generics.RetrieveAPIView):
     @extend_schema(summary='Детали статьи справочника')
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
+
+
+# ── Admin: Reference CRUD ────────────────────────────────────────────────────
+
+class ReferenceCategoryAdminListCreateView(generics.ListCreateAPIView):
+    queryset = ReferenceCategory.objects.prefetch_related('articles').order_by('order')
+    serializer_class = ReferenceCategorySerializer
+    permission_classes = [IsAdminUser]
+
+
+class ReferenceCategoryAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ReferenceCategory.objects.prefetch_related('articles')
+    serializer_class = ReferenceCategorySerializer
+    permission_classes = [IsAdminUser]
+
+
+class ReferenceArticleAdminCreateView(generics.CreateAPIView):
+    queryset = ReferenceArticle.objects.all()
+    serializer_class = ReferenceArticleAdminSerializer
+    permission_classes = [IsAdminUser]
+
+
+class ReferenceArticleAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ReferenceArticle.objects.select_related('category')
+    serializer_class = ReferenceArticleAdminSerializer
+    permission_classes = [IsAdminUser]

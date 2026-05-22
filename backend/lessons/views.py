@@ -2,11 +2,14 @@ from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser
 from drf_spectacular.utils import extend_schema
 
 from .models import Theme, Lesson, UserProgress
-from .serializers import ThemeListSerializer, ThemeDetailSerializer, LessonDetailSerializer
+from .serializers import (
+    ThemeListSerializer, ThemeDetailSerializer, LessonDetailSerializer,
+    ThemeAdminSerializer, LessonAdminSerializer,
+)
 
 
 class ThemeListView(generics.ListAPIView):
@@ -83,3 +86,32 @@ class LessonCompleteView(APIView):
             'stars_earned': progress.stars_earned,
             'user': UserSerializer(request.user).data,
         })
+
+
+# ─── Admin CRUD views ─────────────────────────────────────────────────────────
+
+class ThemeAdminListCreateView(generics.ListCreateAPIView):
+    """GET + POST /api/admin/themes — список и создание тем."""
+    queryset = Theme.objects.prefetch_related('lessons').order_by('order')
+    serializer_class = ThemeAdminSerializer
+    permission_classes = [IsAdminUser]
+
+
+class ThemeAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """GET + PUT + PATCH + DELETE /api/admin/themes/{pk}."""
+    queryset = Theme.objects.prefetch_related('lessons')
+    serializer_class = ThemeAdminSerializer
+    permission_classes = [IsAdminUser]
+
+
+class LessonAdminCreateView(generics.CreateAPIView):
+    """POST /api/admin/lessons — создание урока."""
+    serializer_class = LessonAdminSerializer
+    permission_classes = [IsAdminUser]
+
+
+class LessonAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """GET + PUT + PATCH + DELETE /api/admin/lessons/{pk}."""
+    queryset = Lesson.objects.select_related('theme')
+    serializer_class = LessonAdminSerializer
+    permission_classes = [IsAdminUser]

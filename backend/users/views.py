@@ -1,7 +1,7 @@
-from rest_framework import status
+from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from drf_spectacular.utils import extend_schema, OpenApiExample
@@ -110,3 +110,35 @@ class MeView(APIView):
     )
     def get(self, request):
         return Response(UserSerializer(request.user).data)
+
+
+# ─── Admin user views ─────────────────────────────────────────────────────────
+
+class UserAdminListView(generics.ListAPIView):
+    """GET /api/admin/users — список всех пользователей."""
+    queryset = User.objects.order_by('id')
+    serializer_class = UserSerializer
+    permission_classes = [IsAdminUser]
+
+
+class UserAdminDetailView(generics.RetrieveUpdateAPIView):
+    """GET + PATCH /api/admin/users/{id} — детали + изменение is_staff/is_active."""
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAdminUser]
+    http_method_names = ['get', 'patch', 'head', 'options']
+
+    def get_serializer(self, *args, **kwargs):
+        # Разрешаем частичное обновление через PATCH
+        kwargs['partial'] = True
+        return super().get_serializer(*args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        # Ограничиваем изменяемые поля до is_staff и is_active
+        allowed = {'is_staff', 'is_active'}
+        data = {k: v for k, v in request.data.items() if k in allowed}
+        user = self.get_object()
+        for field, value in data.items():
+            setattr(user, field, value)
+        user.save(update_fields=list(data.keys()))
+        return Response(UserSerializer(user).data)

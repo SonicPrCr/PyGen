@@ -49,7 +49,6 @@ function PyodideLoader({ error }: { error: string | null }) {
         </>
       ) : (
         <>
-          {/* Animated Python logo placeholder */}
           <div className="relative">
             <div
               className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl"
@@ -71,7 +70,6 @@ function PyodideLoader({ error }: { error: string | null }) {
               Дальше всё будет мгновенно.
             </p>
           </div>
-          {/* Progress bar animation */}
           <div
             className="w-48 h-1 rounded-full overflow-hidden"
             style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
@@ -93,12 +91,14 @@ function TestResultsPanel({
   results,
   stdout,
   stderr,
+  aiHint,
 }: {
   results: TestResult[] | null;
   stdout: string;
   stderr: string;
+  aiHint: string | null;
 }) {
-  if (!results && !stdout && !stderr) return null;
+  if (!results && !stdout && !stderr && !aiHint) return null;
 
   return (
     <div
@@ -151,6 +151,23 @@ function TestResultsPanel({
           ))}
         </div>
       )}
+
+      {/* AI hint block */}
+      {aiHint && (
+        <div
+          className="text-sm"
+          style={{
+            background: "rgba(105,94,176,0.1)",
+            borderLeft: "4px solid var(--color-accent-purple)",
+            padding: "12px 16px",
+            borderRadius: "8px",
+            marginTop: "12px",
+          }}
+        >
+          <p className="font-bold text-white mb-1">💡 Подсказка от ИИ:</p>
+          <p className="text-white/80 leading-relaxed">{aiHint}</p>
+        </div>
+      )}
     </div>
   );
 }
@@ -173,9 +190,13 @@ export default function LessonEditorPage() {
   const [testResults, setTestResults] = useState<TestResult[] | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
-  const [generationsLeft, setGenerationsLeft] = useState(3);
+  const [taskSource, setTaskSource] = useState<"ai" | "pool" | null>(null);
+  const [remainingGenerations, setRemainingGenerations] = useState(3);
   const [justPassed, setJustPassed] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [lastCheckFailed, setLastCheckFailed] = useState(false);
+  const [aiHint, setAiHint] = useState<string | null>(null);
+  const [isLoadingHint, setIsLoadingHint] = useState(false);
 
   // Init code from lesson starter_code
   useEffect(() => {
@@ -210,7 +231,13 @@ export default function LessonEditorPage() {
       if (currentTask) {
         const { data } = await api.post(`/api/tasks/${currentTask.id}/check`, { code });
         setTestResults(data.test_results);
-        if (data.is_correct) setJustPassed(true);
+        if (data.is_correct) {
+          setJustPassed(true);
+          setLastCheckFailed(false);
+          setAiHint(null);
+        } else {
+          setLastCheckFailed(true);
+        }
         return;
       }
 
@@ -220,7 +247,6 @@ export default function LessonEditorPage() {
       const tcs = lesson.test_cases ?? [];
 
       if (tcs.length === 0) {
-        // No test cases — just run and show output
         const result = await runCode(code, "");
         setStdout(result.stdout);
         setStderr(result.stderr);
@@ -249,7 +275,6 @@ export default function LessonEditorPage() {
       setTestResults(results);
 
       if (allPassed) {
-        // Mark lesson as complete
         const { data } = await api.post(`/api/lessons/${id}/complete/`, { stars_earned: 3 });
         if (data.user) useAuthStore.setState({ user: data.user });
         queryClient.invalidateQueries({ queryKey: ["lesson", id] });
@@ -265,31 +290,67 @@ export default function LessonEditorPage() {
     }
   }, [lesson, code, currentTask, isReady, runCode, id, queryClient, isRunning]);
 
-  // ── Generate random task ────────────────────────────────────────────────────
+  // ── Generate task via AI (async with polling) ───────────────────────────────
 
   const handleGenerateTask = async () => {
-    if (!lesson || generationsLeft <= 0 || isGenerating) return;
+    if (!lesson || isGenerating) return;
     setIsGenerating(true);
+    setLastCheckFailed(false);
+    setAiHint(null);
     try {
-      const { data } = await api.get(`/api/tasks/random`, {
-        params: { theme_id: lesson.theme },
+      const { data } = await api.post("/api/tasks/generate", {
+        theme_id: lesson.theme,
       });
-      if (data.message) {
-        // All tasks solved
-        setStdout("");
-        setStderr(data.message);
-        return;
+      const celeryTaskId: string = data.task_id;
+
+      // Poll every 1.5s, up to 40 attempts (60 seconds total)
+      for (let i = 0; i < 40; i++) {
+        await new Promise((r) => setTimeout(r, 1500));
+        const { data: statusData } = await api.get(
+          `/api/tasks/generate/status/${celeryTaskId}`
+        );
+
+        if (statusData.status === "success") {
+          setCurrentTask(statusData.task as Task);
+          setTaskSource(statusData.source);
+          setRemainingGenerations(statusData.remaining_generations);
+          setCode(statusData.task.starter_code || "# Напиши код здесь\n");
+          setTestResults(null);
+          setStdout("");
+          setStderr("");
+          return;
+        }
+
+        if (statusData.status === "failed") {
+          alert(statusData.error || "Не удалось сгенерировать задание");
+          if (statusData.remaining_generations !== undefined) {
+            setRemainingGenerations(statusData.remaining_generations);
+          }
+          return;
+        }
+        // status === 'pending' — продолжаем polling
       }
-      setCurrentTask(data as Task);
-      setCode(data.starter_code || "# Напиши код здесь\n");
-      setTestResults(null);
-      setStdout("");
-      setStderr("");
-      setGenerationsLeft((n) => n - 1);
+
+      alert("Превышено время ожидания генерации");
     } catch {
-      setStderr("Не удалось получить задание");
+      alert("Ошибка при генерации задания");
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  // ── Get AI hint ─────────────────────────────────────────────────────────────
+
+  const handleGetHint = async () => {
+    if (!currentTask || isLoadingHint) return;
+    setIsLoadingHint(true);
+    try {
+      const { data } = await api.post(`/api/tasks/${currentTask.id}/hint`, { code });
+      setAiHint(data.hint);
+    } catch {
+      alert("Не удалось получить подсказку. Попробуй позже.");
+    } finally {
+      setIsLoadingHint(false);
     }
   };
 
@@ -297,10 +358,13 @@ export default function LessonEditorPage() {
 
   const handleReturnToLesson = () => {
     setCurrentTask(null);
+    setTaskSource(null);
     setCode(lesson?.starter_code || "# Напиши код здесь\n");
     setTestResults(null);
     setStdout("");
     setStderr("");
+    setLastCheckFailed(false);
+    setAiHint(null);
   };
 
   // ── Navigate next ───────────────────────────────────────────────────────────
@@ -335,7 +399,6 @@ export default function LessonEditorPage() {
     );
   }
 
-  // Show Pyodide loader only in lesson mode (not task mode which uses backend)
   if (pyLoading && !currentTask) {
     return <PyodideLoader error={pyError} />;
   }
@@ -373,6 +436,31 @@ export default function LessonEditorPage() {
         )}
       </div>
 
+      {/* ── Task source badge ───────────────────────────────────────────────── */}
+      {taskSource && (
+        <div
+          className="inline-flex items-center gap-1.5 self-start px-3 py-1 rounded-full text-xs font-semibold"
+          style={
+            taskSource === "ai"
+              ? { backgroundColor: "rgba(105,94,176,0.15)", color: "var(--color-accent-purple-light)", border: "1px solid rgba(105,94,176,0.3)" }
+              : { backgroundColor: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.12)" }
+          }
+        >
+          {taskSource === "ai" ? "🤖 Задание сгенерировано ИИ" : "📦 Задание из пула"}
+        </div>
+      )}
+
+      {/* ── Generating overlay message ──────────────────────────────────────── */}
+      {isGenerating && (
+        <div
+          className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm"
+          style={{ backgroundColor: "rgba(105,94,176,0.1)", border: "1px solid rgba(105,94,176,0.25)" }}
+        >
+          <span className="w-4 h-4 rounded-full border-2 border-t-transparent border-purple-400 animate-spin shrink-0" />
+          <span className="text-white/70">Генерируем задание через ИИ, подождите...</span>
+        </div>
+      )}
+
       {/* ── Task / lesson description ───────────────────────────────────────── */}
       {currentTask ? (
         <div
@@ -388,7 +476,6 @@ export default function LessonEditorPage() {
             className="rounded-xl px-4 py-3 text-sm text-white/70 leading-relaxed"
             style={{ backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
           >
-            {/* Show only first ~200 chars of markdown as plain description */}
             {lesson.content.markdown
               .replace(/^#+\s+/gm, "")
               .replace(/`{1,3}[^`]*`{1,3}/g, "")
@@ -436,7 +523,7 @@ export default function LessonEditorPage() {
       </div>
 
       {/* ── Results panel ──────────────────────────────────────────────────── */}
-      <TestResultsPanel results={testResults} stdout={stdout} stderr={stderr} />
+      <TestResultsPanel results={testResults} stdout={stdout} stderr={stderr} aiHint={aiHint} />
 
       {/* ── Action buttons ──────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3 flex-wrap mt-auto">
@@ -457,10 +544,31 @@ export default function LessonEditorPage() {
           )}
         </button>
 
+        {/* AI Hint — only when task active and last check failed */}
+        {currentTask && lastCheckFailed && (
+          <button
+            onClick={handleGetHint}
+            disabled={isLoadingHint}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{
+              backgroundColor: "rgba(105,94,176,0.12)",
+              color: "var(--color-accent-purple-light)",
+              border: "1px solid rgba(105,94,176,0.3)",
+            }}
+          >
+            {isLoadingHint ? (
+              <span className="w-3.5 h-3.5 rounded-full border-2 border-t-transparent border-purple-400 animate-spin" />
+            ) : (
+              "💡"
+            )}
+            Получить подсказку
+          </button>
+        )}
+
         {/* Generate task */}
         <button
           onClick={handleGenerateTask}
-          disabled={generationsLeft <= 0 || isGenerating || isRunning}
+          disabled={isGenerating || isRunning}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           style={{
             backgroundColor: "rgba(255,219,58,0.1)",
@@ -473,7 +581,7 @@ export default function LessonEditorPage() {
           ) : (
             "✦"
           )}
-          Генерация задания ({generationsLeft})
+          Генерация задания ({remainingGenerations})
         </button>
 
         {/* Spacer */}

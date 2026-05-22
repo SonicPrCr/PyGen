@@ -13,7 +13,7 @@ interface ThemeDetail {
   id: number;
   title: string;
   description: string;
-  icon_url: string;
+  icon: string;
   is_locked: boolean;
   progress_percent: number;
   completed_lessons_count: number;

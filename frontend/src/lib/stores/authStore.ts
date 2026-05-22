@@ -13,6 +13,7 @@ export interface AuthUser {
   current_level: number;
   current_level_color: string;
   total_stars: number;
+  is_staff: boolean;
 }
 
 interface AuthState {

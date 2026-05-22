@@ -6,3 +6,6 @@ drf-spectacular==0.27.2
 psycopg2-binary==2.9.10
 python-decouple==3.8
 Pillow==11.1.0
+openai
+celery
+redis

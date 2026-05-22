@@ -5,7 +5,7 @@ export interface Theme {
   title: string;
   description: string;
   order: number;
-  icon_url: string;
+  icon: string;
   is_locked: boolean;
   progress_percent: number;
   completed_lessons_count: number;
@@ -44,9 +44,9 @@ export function ThemeCard({ theme, showBar = false }: ThemeCardProps) {
           className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-2xl overflow-hidden"
           style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
         >
-          {theme.icon_url ? (
+          {theme.icon ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={theme.icon_url} alt={theme.title} className="w-10 h-10 object-contain" />
+            <img src={theme.icon} alt={theme.title} className="w-10 h-10 object-contain" />
           ) : (
             <span>🐍</span>
           )}

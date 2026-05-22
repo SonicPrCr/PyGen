@@ -17,6 +17,7 @@ class UserSerializer(serializers.ModelSerializer):
             'id', 'username', 'email',
             'first_name', 'last_name', 'middle_name',
             'age', 'avatar', 'xp', 'current_level', 'current_level_color', 'total_stars',
+            'is_staff', 'is_active',
         ]
         read_only_fields = ['id', 'xp', 'current_level', 'total_stars']
 

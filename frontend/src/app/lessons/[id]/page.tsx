@@ -9,6 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useLessonContext } from "@/lib/hooks/useLessonContext";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { useAuthStore } from "@/lib/stores/authStore";
+import { TipTapEditor } from "@/components/editor/TipTapEditor";
 import api from "@/lib/api";
 
 // ─── Copy button for code blocks ─────────────────────────────────────────────
@@ -254,15 +255,24 @@ export default function LessonTheoryPage() {
             </button>
           </div>
 
-          {/* ── Markdown content ───────────────────────────────────────── */}
+          {/* ── Lesson content ─────────────────────────────────────────── */}
           <article>
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              rehypePlugins={[rehypeHighlight]}
-              components={mdComponents}
-            >
-              {lesson.content?.markdown ?? ""}
-            </ReactMarkdown>
+            {lesson.content?.type === "doc" ? (
+              // Новый формат TipTap JSON
+              <TipTapEditor
+                content={lesson.content as Record<string, unknown>}
+                mode="read"
+              />
+            ) : (
+              // Старый формат Markdown (обратная совместимость)
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeHighlight]}
+                components={mdComponents}
+              >
+                {lesson.content?.markdown ?? ""}
+              </ReactMarkdown>
+            )}
           </article>
 
           {/* ── Bottom nav ─────────────────────────────────────────────── */}

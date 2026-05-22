@@ -30,6 +30,12 @@ class ReferenceArticleSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'content', 'order']
 
 
+class ReferenceArticleAdminSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReferenceArticle
+        fields = ['id', 'category', 'title', 'content', 'order']
+
+
 class ReferenceCategorySerializer(serializers.ModelSerializer):
     articles = ReferenceArticleSerializer(many=True, read_only=True)
 

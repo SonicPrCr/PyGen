@@ -3,6 +3,9 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from users.urls import admin_urlpatterns as users_admin_urlpatterns
+from tasks.urls import admin_urlpatterns as tasks_admin_urlpatterns
+from content.urls import admin_urlpatterns as content_admin_urlpatterns
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -21,6 +24,11 @@ urlpatterns = [
 
     # Ачивки
     path('api/', include('achievements.urls')),
+
+    # Admin: управление пользователями, заданиями, справочником (на /api/, не /api/auth/)
+    *[path('api/', include((users_admin_urlpatterns, 'users-admin')))],
+    *[path('api/', include((tasks_admin_urlpatterns, 'tasks-admin')))],
+    *[path('api/', include((content_admin_urlpatterns, 'content-admin')))],
 
     # Документация API (Swagger)
     path('api/schema/',        SpectacularAPIView.as_view(),                            name='schema'),

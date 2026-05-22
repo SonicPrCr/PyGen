@@ -76,7 +76,7 @@ class ThemeListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Theme
         fields = [
-            'id', 'title', 'description', 'order', 'icon_url',
+            'id', 'title', 'description', 'order', 'icon',
             'is_locked', 'progress_percent',
             'completed_lessons_count', 'total_lessons_count',
             'total_xp', 'total_stars',
@@ -156,3 +156,34 @@ class ThemeDetailSerializer(ThemeListSerializer):
             lessons, many=True,
             context={**self.context, 'progress_map': progress_map},
         ).data
+
+
+# ─── Admin serializers (без user-dependent полей) ─────────────────────────────
+
+class LessonAdminSerializer(serializers.ModelSerializer):
+    """Полный сериализатор урока для CRUD в админке."""
+
+    class Meta:
+        model = Lesson
+        fields = [
+            'id', 'theme', 'title', 'order', 'lesson_type',
+            'content', 'starter_code', 'test_cases',
+            'xp_reward', 'stars_reward',
+            'created_at', 'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class ThemeAdminSerializer(serializers.ModelSerializer):
+    """Сериализатор темы для CRUD в админке (с уроками, без user-полей)."""
+    lessons = LessonAdminSerializer(many=True, read_only=True)
+    lessons_count = serializers.IntegerField(source='lessons.count', read_only=True)
+
+    class Meta:
+        model = Theme
+        fields = [
+            'id', 'title', 'description', 'order', 'icon',
+            'lessons_count', 'lessons',
+            'created_at', 'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
