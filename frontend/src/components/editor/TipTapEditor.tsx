@@ -26,6 +26,7 @@ interface TipTapEditorProps {
   onChange?: (json: Record<string, unknown>) => void;
   mode?: "edit" | "read";
   placeholder?: string;
+  compact?: boolean;
 }
 
 // ─── Toolbar button ───────────────────────────────────────────────────────────
@@ -35,21 +36,24 @@ function ToolbarBtn({
   onClick,
   title,
   children,
+  compact,
 }: {
   active?: boolean;
   onClick: () => void;
   title: string;
   children: React.ReactNode;
+  compact?: boolean;
 }) {
+  const size = compact ? "w-6 h-6" : "w-8 h-8";
   return (
     <button
       type="button"
       onMouseDown={(e) => {
-        e.preventDefault(); // не снимает фокус с редактора
+        e.preventDefault();
         onClick();
       }}
       title={title}
-      className="w-8 h-8 flex items-center justify-center rounded text-xs font-bold transition-colors shrink-0"
+      className={`${size} flex items-center justify-center rounded text-xs font-bold transition-colors shrink-0`}
       style={{
         backgroundColor: active ? "var(--color-accent-purple)" : "rgba(255,255,255,0.06)",
         color: active ? "#fff" : "rgba(255,255,255,0.6)",
@@ -126,6 +130,7 @@ export function TipTapEditor({
   onChange,
   mode = "edit",
   placeholder,
+  compact = false,
 }: TipTapEditorProps) {
   const isEdit = mode === "edit";
   const containerRef = useRef<HTMLDivElement>(null);
@@ -179,109 +184,34 @@ export function TipTapEditor({
       {/* ── Toolbar (edit only) ──────────────────────────────────────────────── */}
       {isEdit && editor && (
         <div
-          className="flex items-center gap-1 flex-wrap px-2 py-1.5 rounded-t-xl"
+          className={`flex items-center gap-1 px-2 py-1.5 rounded-t-xl ${compact ? "overflow-x-auto flex-nowrap" : "flex-wrap"}`}
           style={{
             backgroundColor: "#1e1e2e",
             border: "1px solid rgba(255,255,255,0.1)",
             borderBottom: "1px solid rgba(255,255,255,0.06)",
+            scrollbarWidth: "none",
           }}
         >
-          {/* Headings */}
-          <ToolbarBtn
-            active={editor.isActive("heading", { level: 1 })}
-            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-            title="Заголовок 1"
-          >H1</ToolbarBtn>
-          <ToolbarBtn
-            active={editor.isActive("heading", { level: 2 })}
-            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-            title="Заголовок 2"
-          >H2</ToolbarBtn>
-          <ToolbarBtn
-            active={editor.isActive("heading", { level: 3 })}
-            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-            title="Заголовок 3"
-          >H3</ToolbarBtn>
-
+          <ToolbarBtn compact={compact} active={editor.isActive("heading", { level: 1 })} onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} title="Заголовок 1">H1</ToolbarBtn>
+          <ToolbarBtn compact={compact} active={editor.isActive("heading", { level: 2 })} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} title="Заголовок 2">H2</ToolbarBtn>
+          <ToolbarBtn compact={compact} active={editor.isActive("heading", { level: 3 })} onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} title="Заголовок 3">H3</ToolbarBtn>
           <Divider />
-
-          {/* Text formatting */}
-          <ToolbarBtn
-            active={editor.isActive("bold")}
-            onClick={() => editor.chain().focus().toggleBold().run()}
-            title="Жирный (Ctrl+B)"
-          ><Bold size={14} /></ToolbarBtn>
-          <ToolbarBtn
-            active={editor.isActive("italic")}
-            onClick={() => editor.chain().focus().toggleItalic().run()}
-            title="Курсив (Ctrl+I)"
-          ><Italic size={14} /></ToolbarBtn>
-          <ToolbarBtn
-            active={editor.isActive("underline")}
-            onClick={() => editor.chain().focus().toggleUnderline().run()}
-            title="Подчёркивание (Ctrl+U)"
-          ><UnderlineIcon size={14} /></ToolbarBtn>
-          <ToolbarBtn
-            active={editor.isActive("strike")}
-            onClick={() => editor.chain().focus().toggleStrike().run()}
-            title="Зачёркнутый"
-          ><Strikethrough size={14} /></ToolbarBtn>
-
+          <ToolbarBtn compact={compact} active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()} title="Жирный (Ctrl+B)"><Bold size={compact ? 12 : 14} /></ToolbarBtn>
+          <ToolbarBtn compact={compact} active={editor.isActive("italic")} onClick={() => editor.chain().focus().toggleItalic().run()} title="Курсив (Ctrl+I)"><Italic size={compact ? 12 : 14} /></ToolbarBtn>
+          <ToolbarBtn compact={compact} active={editor.isActive("underline")} onClick={() => editor.chain().focus().toggleUnderline().run()} title="Подчёркивание (Ctrl+U)"><UnderlineIcon size={compact ? 12 : 14} /></ToolbarBtn>
+          <ToolbarBtn compact={compact} active={editor.isActive("strike")} onClick={() => editor.chain().focus().toggleStrike().run()} title="Зачёркнутый"><Strikethrough size={compact ? 12 : 14} /></ToolbarBtn>
           <Divider />
-
-          {/* Lists */}
-          <ToolbarBtn
-            active={editor.isActive("bulletList")}
-            onClick={() => editor.chain().focus().toggleBulletList().run()}
-            title="Маркированный список"
-          ><List size={15} /></ToolbarBtn>
-          <ToolbarBtn
-            active={editor.isActive("orderedList")}
-            onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            title="Нумерованный список"
-          ><ListOrdered size={15} /></ToolbarBtn>
-
+          <ToolbarBtn compact={compact} active={editor.isActive("bulletList")} onClick={() => editor.chain().focus().toggleBulletList().run()} title="Маркированный список"><List size={compact ? 13 : 15} /></ToolbarBtn>
+          <ToolbarBtn compact={compact} active={editor.isActive("orderedList")} onClick={() => editor.chain().focus().toggleOrderedList().run()} title="Нумерованный список"><ListOrdered size={compact ? 13 : 15} /></ToolbarBtn>
           <Divider />
-
-          {/* Code */}
-          <ToolbarBtn
-            active={editor.isActive("code")}
-            onClick={() => editor.chain().focus().toggleCode().run()}
-            title="Инлайн-код"
-          ><Code size={14} /></ToolbarBtn>
-          <ToolbarBtn
-            active={editor.isActive("codeBlock")}
-            onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-            title="Блок кода"
-          ><FileCode size={14} /></ToolbarBtn>
-          <ToolbarBtn
-            active={editor.isActive("blockquote")}
-            onClick={() => editor.chain().focus().toggleBlockquote().run()}
-            title="Цитата"
-          ><Quote size={14} /></ToolbarBtn>
-
+          <ToolbarBtn compact={compact} active={editor.isActive("code")} onClick={() => editor.chain().focus().toggleCode().run()} title="Инлайн-код"><Code size={compact ? 12 : 14} /></ToolbarBtn>
+          <ToolbarBtn compact={compact} active={editor.isActive("codeBlock")} onClick={() => editor.chain().focus().toggleCodeBlock().run()} title="Блок кода"><FileCode size={compact ? 12 : 14} /></ToolbarBtn>
+          <ToolbarBtn compact={compact} active={editor.isActive("blockquote")} onClick={() => editor.chain().focus().toggleBlockquote().run()} title="Цитата"><Quote size={compact ? 12 : 14} /></ToolbarBtn>
           <Divider />
-
-          {/* Table */}
-          <ToolbarBtn
-            active={false}
-            onClick={insertTable}
-            title="Вставить таблицу 3×3"
-          ><Table2 size={14} /></ToolbarBtn>
-
+          <ToolbarBtn compact={compact} active={false} onClick={insertTable} title="Вставить таблицу 3×3"><Table2 size={compact ? 12 : 14} /></ToolbarBtn>
           <Divider />
-
-          {/* History */}
-          <ToolbarBtn
-            active={false}
-            onClick={() => editor.chain().focus().undo().run()}
-            title="Отменить (Ctrl+Z)"
-          ><Undo2 size={14} /></ToolbarBtn>
-          <ToolbarBtn
-            active={false}
-            onClick={() => editor.chain().focus().redo().run()}
-            title="Повторить (Ctrl+Y)"
-          ><Redo2 size={14} /></ToolbarBtn>
+          <ToolbarBtn compact={compact} active={false} onClick={() => editor.chain().focus().undo().run()} title="Отменить (Ctrl+Z)"><Undo2 size={compact ? 12 : 14} /></ToolbarBtn>
+          <ToolbarBtn compact={compact} active={false} onClick={() => editor.chain().focus().redo().run()} title="Повторить (Ctrl+Y)"><Redo2 size={compact ? 12 : 14} /></ToolbarBtn>
         </div>
       )}
 
@@ -294,8 +224,8 @@ export function TipTapEditor({
           borderTop: "none",
           borderRadius: "0 0 12px 12px",
           backgroundColor: "rgba(255,255,255,0.02)",
-          padding: "1rem 1.25rem",
-          minHeight: "320px",
+          padding: compact ? "0.75rem" : "1rem 1.25rem",
+          minHeight: compact ? "80px" : "320px",
         } : undefined}
       >
         <EditorContent editor={editor} />

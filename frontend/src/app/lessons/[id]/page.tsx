@@ -9,6 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useLessonContext } from "@/lib/hooks/useLessonContext";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { useAuthStore } from "@/lib/stores/authStore";
+import { useBookmarks } from "@/lib/hooks/useBookmarks";
 import { TipTapEditor } from "@/components/editor/TipTapEditor";
 import api from "@/lib/api";
 
@@ -159,7 +160,7 @@ export default function LessonTheoryPage() {
   const { lesson, theme, themeLessons, isLoading } = useLessonContext(id);
 
   const [isCompleting, setIsCompleting] = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
+  const { isBookmarked, toggleBookmark, isLoading: bookmarkLoading } = useBookmarks(lesson?.id);
 
   // Redirect practice lessons to editor
   useEffect(() => {
@@ -244,12 +245,13 @@ export default function LessonTheoryPage() {
               Урок {lesson.order}. {lesson.title}
             </h1>
             <button
-              onClick={() => setBookmarked((b) => !b)}
-              className="shrink-0 mt-1 transition-opacity hover:opacity-100"
-              style={{ opacity: bookmarked ? 1 : 0.35, color: bookmarked ? "var(--color-accent-yellow)" : "#FFFFFF" }}
-              title="Закладка"
+              onClick={() => lesson && toggleBookmark(lesson.id)}
+              disabled={bookmarkLoading}
+              className="shrink-0 mt-1 transition-opacity hover:opacity-100 disabled:opacity-50"
+              style={{ opacity: isBookmarked ? 1 : 0.35, color: isBookmarked ? "var(--color-accent-yellow)" : "#FFFFFF" }}
+              title={isBookmarked ? "Убрать закладку" : "Добавить в закладки"}
             >
-              <svg width="22" height="26" viewBox="0 0 24 24" fill={bookmarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+              <svg width="22" height="26" viewBox="0 0 24 24" fill={isBookmarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
                 <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
               </svg>
             </button>

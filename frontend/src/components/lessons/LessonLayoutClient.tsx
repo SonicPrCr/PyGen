@@ -1,20 +1,54 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronLeft, BookOpen, FileText, Bookmark } from "lucide-react";
+import { useState, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { ChevronLeft, ChevronRight, BookOpen, FileText, Bookmark } from "lucide-react";
 import { Header } from "@/components/landing/Header";
 import { LessonSidebar } from "@/components/lessons/LessonSidebar";
+import { LessonsPanel } from "@/components/lessons/panels/LessonsPanel";
+import { NotesPanel } from "@/components/lessons/panels/NotesPanel";
+import { BookmarksPanel } from "@/components/lessons/panels/BookmarksPanel";
 
 interface Props {
   lessonId: string;
   children: React.ReactNode;
 }
 
-// ─── Layout root ──────────────────────────────────────────────────────────────
+const TAB_LABELS: Record<string, string> = {
+  lessons: "Учебник",
+  notes: "Конспекты",
+  bookmarks: "Закладки",
+};
 
 export function LessonLayoutClient({ lessonId, children }: Props) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const isEditorPage = pathname.endsWith("/editor");
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [leftOpen, setLeftOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("lessons");
+  const [rightPanelOpen, setRightPanelOpen] = useState(false);
+  const [previewLessonId, setPreviewLessonId] = useState<string>(lessonId);
+
+  // Sync when user navigates to a different lesson
+  useEffect(() => { setPreviewLessonId(lessonId); }, [lessonId]);
+
+  const handleTabClick = (tab: string) => {
+    setActiveTab(tab);
+    setRightPanelOpen(true);
+  };
+
+  const handleSidebarLessonClick = (id: number, type: string) => {
+    setPreviewLessonId(String(id));
+    setActiveTab("lessons");
+    setRightPanelOpen(true);
+    if (isEditorPage && type === "practice") {
+      router.push(`/lessons/${id}/editor`);
+    } else if (!isEditorPage && type === "theory") {
+      router.push(`/lessons/${id}`);
+    }
+  };
 
   return (
     <div
@@ -25,20 +59,32 @@ export function LessonLayoutClient({ lessonId, children }: Props) {
         showBurger
         fullWidth
         logoSrc="/images/landing/logo-lesson.png"
+        onBurgerClick={() => {
+          // Desktop: toggle left sidebar; Mobile: open overlay
+          if (window.innerWidth >= 1024) {
+            setLeftOpen((v) => !v);
+          } else {
+            setSidebarOpen((v) => !v);
+          }
+        }}
       />
 
       <div className="flex flex-1 overflow-hidden" style={{ minHeight: 0 }}>
 
-        {/* ── Desktop sidebar (always visible lg+) ──────────────── */}
+        {/* ── Desktop sidebar (collapsible lg+) ────────────────── */}
         <aside
-          className="hidden lg:flex flex-col w-64 xl:w-72 shrink-0"
+          className="hidden lg:flex flex-col shrink-0 transition-all duration-200 overflow-hidden"
           style={{
+            width: leftOpen ? 272 : 0,
             backgroundColor: "#1A1537",
-            borderRight: "1px solid rgba(255,255,255,0.08)",
-            overflowY: "auto",
+            borderRight: leftOpen ? "1px solid rgba(255,255,255,0.08)" : "none",
+            overflowY: leftOpen ? "auto" : "hidden",
           }}
         >
-          <LessonSidebar currentLessonId={lessonId} />
+          <LessonSidebar
+              currentLessonId={lessonId}
+              onLessonClick={handleSidebarLessonClick}
+            />
         </aside>
 
         {/* ── Mobile sidebar overlay ────────────────────────────── */}
@@ -57,7 +103,6 @@ export function LessonLayoutClient({ lessonId, children }: Props) {
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Mobile sidebar header */}
               <div
                 className="flex items-center justify-between px-4 py-3 shrink-0"
                 style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}
@@ -77,7 +122,10 @@ export function LessonLayoutClient({ lessonId, children }: Props) {
                   </svg>
                 </button>
               </div>
-              <LessonSidebar currentLessonId={lessonId} />
+              <LessonSidebar
+              currentLessonId={lessonId}
+              onLessonClick={handleSidebarLessonClick}
+            />
             </aside>
           </div>
         )}
@@ -87,44 +135,88 @@ export function LessonLayoutClient({ lessonId, children }: Props) {
           {children}
         </main>
 
-        {/* ── Right icon panel ──────────────────────────────────── */}
+        {/* ── Right panel (icon strip + expandable content) ──────── */}
         <aside
-          className="hidden lg:flex flex-col items-center gap-2 w-[60px] p-2 shrink-0"
+          className="hidden lg:flex transition-all duration-200 overflow-hidden shrink-0"
           style={{
+            width: rightPanelOpen ? 380 : 60,
             borderLeft: "1px solid var(--color-border)",
-            backgroundColor: "var(--color-bg-primary)",
           }}
         >
-          {/* Collapse button */}
-          <button
-            className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/5 transition-colors mb-1 text-white/40 hover:text-white/70"
-            title="Свернуть панель"
+          {/* Icon strip (always visible, left side of right panel) */}
+          <div
+            className="flex flex-col items-center gap-2 p-2 shrink-0"
+            style={{
+              width: 60,
+              backgroundColor: "var(--color-bg-primary)",
+              borderRight: rightPanelOpen ? "1px solid var(--color-border)" : "none",
+            }}
           >
-            <ChevronLeft size={20} />
-          </button>
-
-          {/* Tab buttons */}
-          {([
-            { id: "lessons",   Icon: BookOpen,  title: "Учебник" },
-            { id: "notes",     Icon: FileText,  title: "Конспекты" },
-            { id: "bookmarks", Icon: Bookmark,  title: "Закладки" },
-          ] as const).map(({ id, Icon, title }) => (
             <button
-              key={id}
-              onClick={() => setActiveTab(id)}
-              title={title}
-              className="w-10 h-10 flex items-center justify-center rounded-lg transition-colors"
+              onClick={() => setRightPanelOpen((v) => !v)}
+              className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/5 transition-colors mb-1 text-white/40 hover:text-white/70"
+              title={rightPanelOpen ? "Свернуть панель" : "Развернуть панель"}
+            >
+              {rightPanelOpen ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+            </button>
+
+            {([
+              { id: "lessons",   Icon: BookOpen,  title: "Учебник" },
+              { id: "notes",     Icon: FileText,  title: "Конспекты" },
+              { id: "bookmarks", Icon: Bookmark,  title: "Закладки" },
+            ] as const).map(({ id, Icon, title }) => (
+              <button
+                key={id}
+                onClick={() => handleTabClick(id)}
+                title={title}
+                className="w-10 h-10 flex items-center justify-center rounded-lg transition-colors"
+                style={{
+                  backgroundColor:
+                    activeTab === id && rightPanelOpen
+                      ? "var(--color-accent-purple)"
+                      : "transparent",
+                  color:
+                    activeTab === id && rightPanelOpen
+                      ? "#FFFFFF"
+                      : "rgba(255,255,255,0.35)",
+                }}
+              >
+                <Icon size={20} />
+              </button>
+            ))}
+          </div>
+
+          {/* Expandable content panel */}
+          {rightPanelOpen && (
+            <div
+              className="flex flex-col overflow-hidden"
               style={{
-                backgroundColor: activeTab === id
-                  ? "var(--color-accent-purple)"
-                  : "transparent",
-                color: activeTab === id ? "#FFFFFF" : "rgba(255,255,255,0.35)",
+                width: 320,
+                backgroundColor: "var(--color-bg-secondary)",
               }}
             >
-              <Icon size={20} />
-            </button>
-          ))}
+              {/* Panel header */}
+              <div
+                className="px-4 py-3 shrink-0 flex items-center"
+                style={{ borderBottom: "1px solid var(--color-border)" }}
+              >
+                <span className="font-semibold text-sm text-white">
+                  {TAB_LABELS[activeTab]}
+                </span>
+              </div>
+
+              {/* Panel content — panels manage their own scroll */}
+              <div className="flex-1 overflow-hidden flex flex-col">
+                {activeTab === "lessons" && (
+                  <LessonsPanel previewLessonId={previewLessonId} />
+                )}
+                {activeTab === "notes" && <NotesPanel />}
+                {activeTab === "bookmarks" && <BookmarksPanel />}
+              </div>
+            </div>
+          )}
         </aside>
+
       </div>
     </div>
   );

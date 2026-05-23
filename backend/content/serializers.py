@@ -1,11 +1,23 @@
 from rest_framework import serializers
 from .models import Bookmark, Note, ReferenceCategory, ReferenceArticle
+from lessons.models import Lesson
+
+
+class LessonMinimalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Lesson
+        fields = ['id', 'title', 'order', 'lesson_type']
 
 
 class BookmarkSerializer(serializers.ModelSerializer):
+    lesson = LessonMinimalSerializer(read_only=True)
+    lesson_id = serializers.PrimaryKeyRelatedField(
+        queryset=Lesson.objects.all(), source='lesson', write_only=True
+    )
+
     class Meta:
         model = Bookmark
-        fields = ['id', 'lesson', 'created_at']
+        fields = ['id', 'lesson', 'lesson_id', 'created_at']
         read_only_fields = ['id', 'created_at']
 
     def create(self, validated_data):

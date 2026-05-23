@@ -39,10 +39,12 @@ export function Header({
   showBurger = false,
   fullWidth = false,
   logoSrc,
+  onBurgerClick,
 }: {
   showBurger?: boolean;
   fullWidth?: boolean;
   logoSrc?: string;
+  onBurgerClick?: () => void;
 }) {
   const { isAuthenticated, user, logout, openLogin, openRegister } = useAuthStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -91,7 +93,7 @@ export function Header({
         <div className="flex items-center gap-3 shrink-0">
           {showBurger && (
             <button
-              onClick={() => console.log("TODO: collapse sidebar")}
+              onClick={onBurgerClick}
               className="w-10 h-10 flex flex-col items-center justify-center gap-1.5 rounded-lg hover:bg-white/10 transition-colors"
               aria-label="Меню"
             >

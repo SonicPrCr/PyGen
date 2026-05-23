@@ -21,6 +21,7 @@ interface ThemeDetail {
 
 interface Props {
   currentLessonId: string;
+  onLessonClick?: (lessonId: number, lessonType: string) => void;
 }
 
 function lessonUrl(lesson: SidebarLesson): string {
@@ -34,18 +35,12 @@ function isLessonLocked(lessons: SidebarLesson[], index: number): boolean {
   return !lessons[index - 1].is_completed;
 }
 
-// ─── Status/type icon (right side of row) ─────────────────────────────────────
+// ─── Status/type icon ─────────────────────────────────────────────────────────
 
 function LessonIcon({ lesson, locked }: { lesson: SidebarLesson; locked: boolean }) {
-  if (lesson.is_completed) {
-    return <Check size={16} color="var(--color-success)" />;
-  }
-  if (locked) {
-    return <Lock size={14} color="rgba(255,255,255,0.2)" />;
-  }
-  if (lesson.lesson_type === "practice") {
-    return <Code size={16} color="var(--color-accent-purple-light)" />;
-  }
+  if (lesson.is_completed) return <Check size={16} color="var(--color-success)" />;
+  if (locked) return <Lock size={14} color="rgba(255,255,255,0.2)" />;
+  if (lesson.lesson_type === "practice") return <Code size={16} color="var(--color-accent-purple-light)" />;
   return <FileText size={16} color="var(--color-accent-yellow)" />;
 }
 
@@ -55,10 +50,12 @@ function LessonRow({
   lesson,
   locked,
   active,
+  onLessonClick,
 }: {
   lesson: SidebarLesson;
   locked: boolean;
   active: boolean;
+  onLessonClick?: (lessonId: number, lessonType: string) => void;
 }) {
   const inner = (
     <div
@@ -84,6 +81,19 @@ function LessonRow({
   );
 
   if (locked) return <div className="cursor-not-allowed select-none">{inner}</div>;
+
+  // Editor mode: intercept click instead of navigating
+  if (onLessonClick) {
+    return (
+      <button
+        onClick={() => onLessonClick(lesson.id, lesson.lesson_type)}
+        className="w-full block text-left hover:bg-white/[0.04] transition-colors"
+      >
+        {inner}
+      </button>
+    );
+  }
+
   return (
     <Link href={lessonUrl(lesson)} className="block hover:bg-white/[0.04] transition-colors">
       {inner}
@@ -97,10 +107,12 @@ function ThemeSection({
   theme,
   currentLessonId,
   defaultExpanded,
+  onLessonClick,
 }: {
   theme: ThemeSummary;
   currentLessonId: string;
   defaultExpanded: boolean;
+  onLessonClick?: (lessonId: number, lessonType: string) => void;
 }) {
   const [expanded, setExpanded] = useState(defaultExpanded);
 
@@ -118,39 +130,34 @@ function ThemeSection({
 
   return (
     <div>
-      {/* Theme header row */}
       <button
         onClick={() => setExpanded((e) => !e)}
         className="w-full flex items-center justify-between px-4 py-3 gap-2 transition-colors hover:bg-white/[0.04]"
-        style={{
-          borderLeft: `2px solid ${expanded ? "var(--color-accent-purple)" : "transparent"}`,
-        }}
+        style={{ borderLeft: `2px solid ${expanded ? "var(--color-accent-purple)" : "transparent"}` }}
       >
         <span
           className="text-[13px] font-bold leading-tight text-left truncate"
           style={{
-            color: expanded ? "#FFFFFF" : "rgba(255,255,255,0.5)",
+            color: theme.is_locked ? "rgba(255,255,255,0.3)" : expanded ? "#FFFFFF" : "rgba(255,255,255,0.5)",
             fontFamily: "'Science Gothic', sans-serif",
             letterSpacing: "0.02em",
           }}
         >
           {theme.title}
         </span>
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="rgba(255,255,255,0.3)"
-          strokeWidth="2.5"
-          className="shrink-0 transition-transform duration-200"
-          style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}
-        >
-          <path d="M6 9l6 6 6-6" />
-        </svg>
+        {theme.is_locked
+          ? <Lock size={13} className="shrink-0" color="rgba(255,255,255,0.2)" />
+          : <svg
+              width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="rgba(255,255,255,0.3)" strokeWidth="2.5"
+              className="shrink-0 transition-transform duration-200"
+              style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}
+            >
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+        }
       </button>
 
-      {/* Lessons list */}
       {expanded && (
         <div className="mb-1">
           {lessons.length === 0 ? (
@@ -164,15 +171,15 @@ function ThemeSection({
               <LessonRow
                 key={lesson.id}
                 lesson={lesson}
-                locked={isLessonLocked(lessons, idx)}
+                locked={theme.is_locked || isLessonLocked(lessons, idx)}
                 active={String(lesson.id) === currentLessonId}
+                onLessonClick={onLessonClick}
               />
             ))
           )}
         </div>
       )}
 
-      {/* Thin separator between themes */}
       <div className="mx-4 h-px" style={{ backgroundColor: "rgba(255,255,255,0.05)" }} />
     </div>
   );
@@ -180,7 +187,7 @@ function ThemeSection({
 
 // ─── Sidebar root ─────────────────────────────────────────────────────────────
 
-export function LessonSidebar({ currentLessonId }: Props) {
+export function LessonSidebar({ currentLessonId, onLessonClick }: Props) {
   const { theme: currentTheme, isLoading: ctxLoading } = useLessonContext(currentLessonId);
 
   const { data: allThemes = [], isLoading: themesLoading } = useQuery<ThemeSummary[]>({
@@ -210,6 +217,7 @@ export function LessonSidebar({ currentLessonId }: Props) {
           theme={theme}
           currentLessonId={currentLessonId}
           defaultExpanded={theme.id === currentTheme?.id}
+          onLessonClick={onLessonClick}
         />
       ))}
     </nav>

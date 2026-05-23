@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
@@ -8,6 +8,7 @@ import { useLessonContext } from "@/lib/hooks/useLessonContext";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { usePyodide } from "@/lib/hooks/usePyodide";
 import { useAuthStore } from "@/lib/stores/authStore";
+import { useEditorPanelStore } from "@/lib/stores/editorPanelStore";
 import api from "@/lib/api";
 
 // Monaco must be client-only (no SSR)
@@ -198,6 +199,18 @@ export default function LessonEditorPage() {
   const [aiHint, setAiHint] = useState<string | null>(null);
   const [isLoadingHint, setIsLoadingHint] = useState(false);
 
+  // Reset all task/result state when navigating to a different lesson
+  useEffect(() => {
+    setCurrentTask(null);
+    setTaskSource(null);
+    setTestResults(null);
+    setStdout("");
+    setStderr("");
+    setJustPassed(false);
+    setLastCheckFailed(false);
+    setAiHint(null);
+  }, [id]);
+
   // Init code from lesson starter_code
   useEffect(() => {
     if (lesson && !currentTask) {
@@ -381,6 +394,50 @@ export default function LessonEditorPage() {
     }
   };
 
+  // ── Sync state to right panel store ────────────────────────────────────────
+
+  const panelStore = useEditorPanelStore();
+  const panelUpdate = panelStore.update;
+
+  // Stable callback refs so the panel always calls the latest version
+  const checkRef = useRef(handleCheck);
+  useEffect(() => { checkRef.current = handleCheck; }, [handleCheck]);
+  const generateRef = useRef(handleGenerateTask);
+  useEffect(() => { generateRef.current = handleGenerateTask; }, [handleGenerateTask]);
+  const hintRef = useRef(handleGetHint);
+  useEffect(() => { hintRef.current = handleGetHint; }, [handleGetHint]);
+  const nextRef = useRef(handleNext);
+  useEffect(() => { nextRef.current = handleNext; }, [handleNext]);
+
+  // Register callbacks once; reset on unmount
+  useEffect(() => {
+    panelUpdate({
+      onCheck: () => checkRef.current(),
+      onGenerate: () => generateRef.current(),
+      onHint: () => hintRef.current(),
+      onNext: () => nextRef.current(),
+    });
+    return () => useEditorPanelStore.getState().reset();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sync reactive state
+  useEffect(() => {
+    panelUpdate({
+      taskTitle: currentTask?.title ?? null,
+      taskDescription: currentTask?.description ?? null,
+      taskSource,
+      aiHint,
+      isRunning,
+      isGenerating,
+      isLoadingHint,
+      canProceed,
+      remainingGenerations,
+      lastCheckFailed,
+      nextLessonLabel: !nextLesson ? "Завершить тему" : "Дальше →",
+    });
+  }, [currentTask, taskSource, aiHint, isRunning, isGenerating, isLoadingHint,
+      canProceed, remainingGenerations, lastCheckFailed, nextLesson, panelUpdate]);
+
   // ── Guards ──────────────────────────────────────────────────────────────────
 
   if (!isInitialized || isLoading) {
@@ -407,88 +464,6 @@ export default function LessonEditorPage() {
 
   return (
     <div className="flex flex-col flex-1 px-4 lg:px-6 py-6 gap-4 w-full">
-
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="flex flex-col gap-1">
-          <h1
-            className="text-xl sm:text-2xl font-black text-white leading-tight"
-            style={{ fontFamily: "'Science Gothic', sans-serif" }}
-          >
-            {currentTask ? "Задание" : `Урок ${lesson.order}. ${lesson.title}`}
-          </h1>
-          {lesson.is_completed && !justPassed && (
-            <span className="text-xs text-green-400 font-semibold">✓ Урок пройден</span>
-          )}
-          {justPassed && (
-            <span className="text-xs text-green-400 font-semibold">✓ Отлично! Все тесты прошли</span>
-          )}
-        </div>
-
-        {currentTask && (
-          <button
-            onClick={handleReturnToLesson}
-            className="text-sm px-3 py-1.5 rounded-lg transition-colors hover:bg-white/10"
-            style={{ color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.1)" }}
-          >
-            ← Вернуться к уроку
-          </button>
-        )}
-      </div>
-
-      {/* ── Task source badge ───────────────────────────────────────────────── */}
-      {taskSource && (
-        <div
-          className="inline-flex items-center gap-1.5 self-start px-3 py-1 rounded-full text-xs font-semibold"
-          style={
-            taskSource === "ai"
-              ? { backgroundColor: "rgba(105,94,176,0.15)", color: "var(--color-accent-purple-light)", border: "1px solid rgba(105,94,176,0.3)" }
-              : { backgroundColor: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.12)" }
-          }
-        >
-          {taskSource === "ai" ? "🤖 Задание сгенерировано ИИ" : "📦 Задание из пула"}
-        </div>
-      )}
-
-      {/* ── Generating overlay message ──────────────────────────────────────── */}
-      {isGenerating && (
-        <div
-          className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm"
-          style={{ backgroundColor: "rgba(105,94,176,0.1)", border: "1px solid rgba(105,94,176,0.25)" }}
-        >
-          <span className="w-4 h-4 rounded-full border-2 border-t-transparent border-purple-400 animate-spin shrink-0" />
-          <span className="text-white/70">Генерируем задание через ИИ, подождите...</span>
-        </div>
-      )}
-
-      {/* ── Task / lesson description ───────────────────────────────────────── */}
-      {currentTask ? (
-        <div
-          className="rounded-xl px-4 py-3"
-          style={{ backgroundColor: "rgba(105,94,176,0.1)", border: "1px solid rgba(105,94,176,0.25)" }}
-        >
-          <p className="text-sm font-bold text-white mb-1">{currentTask.title}</p>
-          <p className="text-sm text-white/70">{currentTask.description}</p>
-        </div>
-      ) : (
-        lesson.content?.markdown && (
-          <div
-            className="rounded-xl px-4 py-3 text-sm text-white/70 leading-relaxed"
-            style={{ backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
-          >
-            {lesson.content.markdown
-              .replace(/^#+\s+/gm, "")
-              .replace(/`{1,3}[^`]*`{1,3}/g, "")
-              .replace(/\*{1,2}([^*]+)\*{1,2}/g, "$1")
-              .split("\n")
-              .filter(Boolean)
-              .slice(0, 3)
-              .join(" ")
-              .slice(0, 220)}
-            {lesson.content.markdown.length > 220 && "…"}
-          </div>
-        )
-      )}
 
       {/* ── Monaco Editor ──────────────────────────────────────────────────── */}
       <div
@@ -524,79 +499,6 @@ export default function LessonEditorPage() {
 
       {/* ── Results panel ──────────────────────────────────────────────────── */}
       <TestResultsPanel results={testResults} stdout={stdout} stderr={stderr} aiHint={aiHint} />
-
-      {/* ── Action buttons ──────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3 flex-wrap mt-auto">
-        {/* Check / Verify */}
-        <button
-          onClick={handleCheck}
-          disabled={isRunning || (!isReady && !currentTask)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-          style={{ backgroundColor: "var(--color-accent-purple)", color: "#FFFFFF" }}
-        >
-          {isRunning ? (
-            <>
-              <span className="w-3.5 h-3.5 rounded-full border-2 border-t-transparent border-white animate-spin" />
-              Проверка...
-            </>
-          ) : (
-            "▶ Проверить"
-          )}
-        </button>
-
-        {/* AI Hint — only when task active and last check failed */}
-        {currentTask && lastCheckFailed && (
-          <button
-            onClick={handleGetHint}
-            disabled={isLoadingHint}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{
-              backgroundColor: "rgba(105,94,176,0.12)",
-              color: "var(--color-accent-purple-light)",
-              border: "1px solid rgba(105,94,176,0.3)",
-            }}
-          >
-            {isLoadingHint ? (
-              <span className="w-3.5 h-3.5 rounded-full border-2 border-t-transparent border-purple-400 animate-spin" />
-            ) : (
-              "💡"
-            )}
-            Получить подсказку
-          </button>
-        )}
-
-        {/* Generate task */}
-        <button
-          onClick={handleGenerateTask}
-          disabled={isGenerating || isRunning}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          style={{
-            backgroundColor: "rgba(255,219,58,0.1)",
-            color: "var(--color-accent-yellow)",
-            border: "1px solid rgba(255,219,58,0.25)",
-          }}
-        >
-          {isGenerating ? (
-            <span className="w-3.5 h-3.5 rounded-full border-2 border-t-transparent border-yellow-400 animate-spin" />
-          ) : (
-            "✦"
-          )}
-          Генерация задания ({remainingGenerations})
-        </button>
-
-        {/* Spacer */}
-        <div className="flex-1" />
-
-        {/* Next */}
-        <button
-          onClick={handleNext}
-          disabled={!canProceed}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-opacity hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed"
-          style={{ backgroundColor: "var(--color-accent-yellow)", color: "#0C0827" }}
-        >
-          {!nextLesson ? "Завершить тему" : "Дальше →"}
-        </button>
-      </div>
     </div>
   );
 }
