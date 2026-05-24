@@ -9,3 +9,7 @@ Pillow==11.1.0
 openai
 celery
 redis
+pytest
+pytest-django
+factory-boy
+faker
