@@ -56,7 +56,7 @@ export default function AdminUsersPage() {
   return (
     <div>
       <AdminHeader title="Пользователи" />
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <AdminCard>
           {loading ? (
             <div className="p-8 text-center" style={{ color: "var(--color-text-muted)" }}>Загрузка...</div>
@@ -114,7 +114,7 @@ export default function AdminUsersPage() {
                       </div>
                     </AdminTd>
                     <AdminTd>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1.5">
                         <AdminBtn
                           variant="ghost"
                           disabled={toggling === user.id}

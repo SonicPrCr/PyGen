@@ -65,7 +65,7 @@ export default function AdminThemeEditPage() {
   return (
     <div>
       <AdminHeader title="Редактировать тему" />
-      <div className="p-6 max-w-xl">
+      <div className="p-4 sm:p-6 max-w-xl">
         {loading ? (
           <p style={{ color: "var(--color-text-muted)" }}>Загрузка...</p>
         ) : (

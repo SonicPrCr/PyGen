@@ -71,14 +71,14 @@ export default function AdminReferencePage() {
   return (
     <div>
       <AdminHeader title="Справочник" />
-      <div className="p-6 flex flex-col gap-6 max-w-4xl">
+      <div className="p-4 sm:p-6 flex flex-col gap-6 max-w-4xl">
 
         {/* Новая категория */}
         <AdminCard className="p-5">
           <p className="text-sm font-semibold mb-3" style={{ color: "var(--color-text-muted)" }}>
             Добавить категорию
           </p>
-          <form onSubmit={handleAddCategory} className="flex gap-3 items-end">
+          <form onSubmit={handleAddCategory} className="flex flex-col sm:flex-row sm:items-end gap-3">
             <div className="flex-1">
               <AdminInput
                 label="Название"
@@ -87,7 +87,7 @@ export default function AdminReferencePage() {
                 required
               />
             </div>
-            <div style={{ width: 100 }}>
+            <div className="w-full sm:w-24">
               <AdminInput
                 label="Порядок"
                 type="number"
@@ -111,7 +111,7 @@ export default function AdminReferencePage() {
             {categories.map((cat) => (
               <AdminCard key={cat.id}>
                 <div
-                  className="flex items-center justify-between p-4 cursor-pointer"
+                  className="flex flex-wrap items-center justify-between gap-2 p-4 cursor-pointer"
                   onClick={() => setExpanded(expanded === cat.id ? null : cat.id)}
                 >
                   <div className="flex items-center gap-3">
@@ -126,7 +126,7 @@ export default function AdminReferencePage() {
                       {cat.articles.length} статей
                     </span>
                   </div>
-                  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                     <AdminBtn href={`/admin/reference/articles/new?category_id=${cat.id}`} variant="ghost">
                       + Статья
                     </AdminBtn>

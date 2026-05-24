@@ -76,9 +76,9 @@ export default function AdminArticleEditPage() {
         <div className="p-8 text-center" style={{ color: "var(--color-text-muted)" }}>Загрузка...</div>
       ) : (
         <form onSubmit={handleSubmit}>
-          <div className="flex gap-0 h-[calc(100vh-73px)]">
+          <div className="flex flex-col lg:flex-row lg:h-[calc(100vh-73px)]">
             <div
-              className="w-80 shrink-0 flex flex-col gap-4 p-5 overflow-y-auto"
+              className="w-full lg:w-80 lg:shrink-0 flex flex-col gap-4 p-4 sm:p-5 lg:overflow-y-auto"
               style={{ borderRight: "1px solid var(--color-border)" }}
             >
               <AdminSelect label="Категория" value={form.category} onChange={(e) => set("category", e.target.value)} required>

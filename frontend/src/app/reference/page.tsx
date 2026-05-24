@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Header } from "@/components/landing/Header";
 import { Footer } from "@/components/landing/Footer";
 import { TipTapEditor } from "@/components/editor/TipTapEditor";
@@ -40,21 +40,21 @@ function CategoryNav({
   onSelect: (id: number) => void;
 }) {
   return (
-    <nav className="p-4 space-y-4">
+    <nav className="py-2">
       {categories.map((cat) => (
         <div key={cat.id}>
           <span
-            className="block text-xs font-bold uppercase tracking-wider px-3 py-1"
+            className="text-[10px] font-bold uppercase tracking-widest px-4 pt-4 pb-1 block"
             style={{ color: "rgba(255,255,255,0.35)" }}
           >
             {cat.title}
           </span>
-          <div className="mt-1 space-y-0.5">
+          <div>
             {cat.articles.map((article) => (
               <button
                 key={article.id}
                 onClick={() => onSelect(article.id)}
-                className="w-full text-left px-3 py-2 rounded-lg text-sm transition-colors"
+                className="w-full text-left px-4 py-2 text-sm transition-colors"
                 style={{
                   backgroundColor:
                     activeId === article.id
@@ -62,15 +62,31 @@ function CategoryNav({
                       : "transparent",
                   color:
                     activeId === article.id
-                      ? "#ffffff"
-                      : "rgba(255,255,255,0.6)",
+                      ? "#FFFFFF"
+                      : "rgba(255,255,255,0.65)",
+                  fontWeight: activeId === article.id ? 600 : 400,
+                }}
+                onMouseEnter={(e) => {
+                  if (activeId !== article.id) {
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                      "rgba(255,255,255,0.05)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (activeId !== article.id) {
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                      "transparent";
+                  }
                 }}
               >
                 {article.title}
               </button>
             ))}
             {cat.articles.length === 0 && (
-              <p className="px-3 py-1 text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
+              <p
+                className="px-4 py-1 text-xs"
+                style={{ color: "rgba(255,255,255,0.2)" }}
+              >
                 Нет статей
               </p>
             )}
@@ -95,11 +111,12 @@ function ArticleView({ articleId }: { articleId: number }) {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-4 p-6 lg:p-10 max-w-3xl">
-        <div className="h-8 w-48 rounded-lg animate-pulse" style={{ backgroundColor: "rgba(255,255,255,0.08)" }} />
-        <div className="h-4 w-full rounded animate-pulse" style={{ backgroundColor: "rgba(255,255,255,0.05)" }} />
-        <div className="h-4 w-5/6 rounded animate-pulse" style={{ backgroundColor: "rgba(255,255,255,0.05)" }} />
-        <div className="h-4 w-4/6 rounded animate-pulse" style={{ backgroundColor: "rgba(255,255,255,0.05)" }} />
+      <div className="space-y-4 animate-pulse">
+        <div className="h-8 rounded-lg w-2/3" style={{ backgroundColor: "rgba(255,255,255,0.08)" }} />
+        <div className="h-4 rounded w-full" style={{ backgroundColor: "rgba(255,255,255,0.05)" }} />
+        <div className="h-4 rounded w-5/6" style={{ backgroundColor: "rgba(255,255,255,0.05)" }} />
+        <div className="h-4 rounded w-4/5" style={{ backgroundColor: "rgba(255,255,255,0.05)" }} />
+        <div className="h-32 rounded-lg w-full mt-6" style={{ backgroundColor: "rgba(255,255,255,0.05)" }} />
       </div>
     );
   }
@@ -107,9 +124,9 @@ function ArticleView({ articleId }: { articleId: number }) {
   if (!article) return null;
 
   return (
-    <div className="p-6 lg:p-10 max-w-3xl w-full">
+    <div>
       <h1
-        className="text-2xl lg:text-3xl font-black text-white mb-6"
+        className="text-2xl lg:text-3xl font-bold text-white mb-6"
         style={{ fontFamily: "var(--font-heading)" }}
       >
         {article.title}
@@ -118,9 +135,15 @@ function ArticleView({ articleId }: { articleId: number }) {
       {article.content?.type === "doc" ? (
         <TipTapEditor content={article.content} mode="read" />
       ) : (
-        <p className="text-sm" style={{ color: "rgba(255,255,255,0.3)" }}>
-          Нет содержимого
-        </p>
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <p className="text-4xl mb-4">📖</p>
+          <p className="text-white/40 text-sm">
+            Содержимое этой статьи ещё не добавлено
+          </p>
+          <p className="text-white/25 text-xs mt-1">
+            Вернитесь позже или выберите другую статью
+          </p>
+        </div>
       )}
     </div>
   );
@@ -130,7 +153,7 @@ function ArticleView({ articleId }: { articleId: number }) {
 
 export default function ReferencePage() {
   const [activeArticleId, setActiveArticleId] = useState<number | null>(null);
-  const [mobileShowArticle, setMobileShowArticle] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const { data: categories = [], isLoading: catsLoading } = useQuery<Category[]>({
     queryKey: ["reference-categories"],
@@ -141,7 +164,7 @@ export default function ReferencePage() {
     staleTime: 5 * 60_000,
   });
 
-  // Auto-select first article when categories load
+  // Авто-выбор первой статьи при загрузке
   useEffect(() => {
     if (activeArticleId === null && categories.length > 0) {
       const first = categories[0]?.articles[0];
@@ -151,7 +174,7 @@ export default function ReferencePage() {
 
   const handleSelect = (id: number) => {
     setActiveArticleId(id);
-    setMobileShowArticle(true);
+    setMobileNavOpen(false);
   };
 
   return (
@@ -160,73 +183,125 @@ export default function ReferencePage() {
       style={{ backgroundColor: "var(--color-bg-primary)" }}
     >
       <Header />
-      <div className="h-px" style={{ backgroundColor: "rgba(255,255,255,0.08)" }} />
 
-      <div className="flex flex-1 overflow-hidden" style={{ minHeight: 0 }}>
+      <main className="flex-1 px-4 sm:px-6 lg:px-16 py-8 sm:py-10">
+        <div className="max-w-7xl mx-auto">
 
-        {/* ── Left nav — mobile: hidden when article open ────────────────── */}
-        <aside
-          className={`${mobileShowArticle ? "hidden" : "flex"} lg:flex flex-col shrink-0`}
-          style={{
-            width: 270,
-            borderRight: "1px solid rgba(255,255,255,0.08)",
-            backgroundColor: "var(--color-bg-secondary)",
-            overflowY: "auto",
-          }}
-        >
-          {catsLoading ? (
-            <div className="p-4 flex flex-col gap-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-6 rounded animate-pulse" style={{ backgroundColor: "rgba(255,255,255,0.06)" }} />
-              ))}
-            </div>
-          ) : categories.length === 0 ? (
-            <div className="p-6 text-center text-sm" style={{ color: "rgba(255,255,255,0.3)" }}>
-              Справочник пуст
-            </div>
-          ) : (
-            <CategoryNav
-              categories={categories}
-              activeId={activeArticleId}
-              onSelect={handleSelect}
-            />
-          )}
-        </aside>
-
-        {/* ── Right content ──────────────────────────────────────────────── */}
-        <main
-          className={`${mobileShowArticle ? "flex" : "hidden"} lg:flex flex-1 flex-col overflow-y-auto`}
-        >
-          {/* Mobile back button */}
+          {/* ── Мобильная кнопка открытия меню ── */}
           <button
-            className="lg:hidden flex items-center gap-1.5 px-4 py-3 text-sm shrink-0"
-            style={{
-              color: "rgba(255,255,255,0.5)",
-              borderBottom: "1px solid rgba(255,255,255,0.08)",
-            }}
-            onClick={() => setMobileShowArticle(false)}
+            onClick={() => setMobileNavOpen(true)}
+            className="lg:hidden flex items-center gap-2 mb-6 text-sm transition-colors"
+            style={{ color: "rgba(255,255,255,0.6)" }}
           >
-            <ChevronLeft size={16} />
-            Все категории
+            <Menu size={18} />
+            <span>Разделы справочника</span>
           </button>
 
-          {activeArticleId !== null ? (
-            <ArticleView articleId={activeArticleId} />
-          ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <p className="text-sm" style={{ color: "rgba(255,255,255,0.25)" }}>
-                Выбери статью из списка слева
-              </p>
+          {/* ── Мобильный overlay ── */}
+          {mobileNavOpen && (
+            <div
+              className="lg:hidden fixed inset-0 z-50 flex"
+              onClick={() => setMobileNavOpen(false)}
+            >
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+              <aside
+                className="relative z-10 w-72 flex flex-col h-full"
+                style={{ backgroundColor: "var(--color-bg-secondary)" }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Заголовок overlay */}
+                <div
+                  className="flex items-center justify-between px-4 py-3 shrink-0"
+                  style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}
+                >
+                  <span className="font-bold text-sm text-white">Справочник</span>
+                  <button
+                    onClick={() => setMobileNavOpen(false)}
+                    className="w-7 h-7 flex items-center justify-center rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+                {/* Список */}
+                <div className="flex-1 overflow-y-auto">
+                  {catsLoading ? (
+                    <div className="p-4 flex flex-col gap-3">
+                      {[1, 2, 3].map((i) => (
+                        <div
+                          key={i}
+                          className="h-6 rounded animate-pulse"
+                          style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <CategoryNav
+                      categories={categories}
+                      activeId={activeArticleId}
+                      onSelect={handleSelect}
+                    />
+                  )}
+                </div>
+              </aside>
             </div>
           )}
-        </main>
 
-      </div>
+          {/* ── Основной layout ── */}
+          <div className="flex gap-6 lg:gap-8 items-start">
 
-      {/* Footer only on desktop (не перекрывает мобильный список) */}
-      <div className="hidden lg:block">
-        <Footer />
-      </div>
+            {/* Десктоп меню */}
+            <aside
+              className="hidden lg:block w-56 shrink-0"
+              style={{
+                border: "1px solid var(--color-accent-yellow)",
+                borderRadius: "12px",
+                overflow: "hidden",
+              }}
+            >
+              {catsLoading ? (
+                <div className="p-4 flex flex-col gap-3">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="h-6 rounded animate-pulse"
+                      style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+                    />
+                  ))}
+                </div>
+              ) : categories.length === 0 ? (
+                <div
+                  className="p-6 text-center text-sm"
+                  style={{ color: "rgba(255,255,255,0.3)" }}
+                >
+                  Справочник пуст
+                </div>
+              ) : (
+                <CategoryNav
+                  categories={categories}
+                  activeId={activeArticleId}
+                  onSelect={handleSelect}
+                />
+              )}
+            </aside>
+
+            {/* Контентная зона */}
+            <div className="flex-1 min-w-0">
+              {activeArticleId !== null ? (
+                <ArticleView articleId={activeArticleId} />
+              ) : (
+                <div className="flex items-center justify-center py-16">
+                  <p className="text-sm" style={{ color: "rgba(255,255,255,0.25)" }}>
+                    Выбери статью из списка слева
+                  </p>
+                </div>
+              )}
+            </div>
+
+          </div>
+        </div>
+      </main>
+
+      <Footer />
     </div>
   );
 }

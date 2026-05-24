@@ -50,7 +50,7 @@ export default function AdminThemeLessonsPage() {
         title={theme ? `Уроки: ${theme.title}` : "Уроки"}
         action={<AdminBtn href={`/admin/lessons/new?theme_id=${id}`} variant="primary">+ Создать урок</AdminBtn>}
       />
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <AdminCard>
           {loading ? (
             <div className="p-8 text-center" style={{ color: "var(--color-text-muted)" }}>Загрузка...</div>

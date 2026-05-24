@@ -39,7 +39,7 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <h1
         className="text-2xl font-black text-white mb-8"
         style={{ fontFamily: "var(--font-heading)" }}

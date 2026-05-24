@@ -52,7 +52,7 @@ export default function AdminThemeNewPage() {
   return (
     <div>
       <AdminHeader title="Новая тема" />
-      <div className="p-6 max-w-xl">
+      <div className="p-4 sm:p-6 max-w-xl">
         <AdminCard className="p-6">
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <AdminInput label="Название" value={form.title} onChange={(e) => set("title", e.target.value)} required />

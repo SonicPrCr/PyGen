@@ -50,15 +50,15 @@ export default function AdminTasksPage() {
   return (
     <div>
       <AdminHeader title="Пул заданий" />
-      <div className="p-6">
-        <div className="mb-4 flex items-end gap-4">
-          <div style={{ width: 260 }}>
+      <div className="p-4 sm:p-6">
+        <div className="mb-4 flex flex-col sm:flex-row sm:items-end gap-3">
+          <div className="w-full sm:w-64">
             <AdminSelect label="Фильтр по теме" value={filterTheme} onChange={(e) => setFilterTheme(e.target.value)}>
               <option value="">Все темы</option>
               {themes.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
             </AdminSelect>
           </div>
-          <span className="pb-2.5" style={{ color: "var(--color-text-muted)", fontSize: 13 }}>
+          <span className="sm:pb-2.5" style={{ color: "var(--color-text-muted)", fontSize: 13 }}>
             Всего: {tasks.length}
           </span>
         </div>
@@ -96,7 +96,7 @@ export default function AdminTasksPage() {
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                           whiteSpace: "nowrap",
-                          maxWidth: 340,
+                          maxWidth: "min(340px, 40vw)",
                         }}
                       >
                         {task.description}

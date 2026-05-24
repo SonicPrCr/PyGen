@@ -42,7 +42,7 @@ export default function AdminThemesPage() {
         action={<AdminBtn href="/admin/themes/new" variant="primary">+ Создать тему</AdminBtn>}
       />
 
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <AdminCard>
           {loading ? (
             <div className="p-8 text-center" style={{ color: "var(--color-text-muted)" }}>Загрузка...</div>

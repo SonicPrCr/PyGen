@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/landing/Header";
 import { Footer } from "@/components/landing/Footer";
@@ -34,6 +35,26 @@ function UserCard({ user, achievements }: { user: AuthUser; achievements: Achiev
   const xpNeeded = getXpForNextLevel(level);
   const xpPercent = Math.min(100, Math.round((xpInLevel / xpNeeded) * 100));
 
+  const [achExpanded, setAchExpanded] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarUpload = async (file: File) => {
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("avatar", file);
+      const { data } = await api.patch("/api/auth/me/", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      useAuthStore.setState({ user: data });
+    } catch {
+      // silent — avatar stays unchanged
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const avatarLetter =
     user.first_name?.[0]?.toUpperCase() ||
     user.email?.[0]?.toUpperCase() ||
@@ -43,12 +64,14 @@ function UserCard({ user, achievements }: { user: AuthUser; achievements: Achiev
     [user.first_name, user.last_name].filter(Boolean).join(" ") ||
     user.email;
 
-  const visibleAch = achievements.slice(0, 4);
-  const extra = achievements.length - visibleAch.length;
+  const MAX_VISIBLE = 6;
+  const visibleAch = achExpanded ? achievements : achievements.slice(0, MAX_VISIBLE);
+  const hiddenCount = achievements.length - MAX_VISIBLE;
+  const hasMore = !achExpanded && hiddenCount > 0;
 
   return (
     <div
-      className="rounded-2xl p-6 flex flex-col gap-5"
+      className="rounded-2xl p-6 pb-8 flex flex-col gap-5"
       style={{
         border: "1px solid var(--color-accent-yellow)",
         backgroundColor: "var(--color-bg-primary)",
@@ -56,19 +79,43 @@ function UserCard({ user, achievements }: { user: AuthUser; achievements: Achiev
     >
       {/* Avatar */}
       <div className="flex flex-col items-center gap-2">
-        <div
-          className="w-20 h-20 rounded-full flex items-center justify-center"
-          style={{ backgroundColor: "#FFFFFF" }}
+        <button
+          className="relative w-20 h-20 rounded-full group focus:outline-none"
+          onClick={() => fileInputRef.current?.click()}
+          title="Нажми чтобы изменить фото"
+          disabled={isUploading}
         >
-          <span className="text-3xl font-black text-[#0C0827]">{avatarLetter}</span>
-        </div>
+          <div className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center" style={{ backgroundColor: "#FFFFFF" }}>
+            {user.avatar ? (
+              <img src={user.avatar} alt="avatar" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-3xl font-black text-[#0C0827]">{avatarLetter}</span>
+            )}
+          </div>
+          <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <span className="text-white text-lg">{isUploading ? "⏳" : "📷"}</span>
+          </div>
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleAvatarUpload(file);
+            e.target.value = "";
+          }}
+        />
         <span className="text-white font-bold text-lg">{displayName}</span>
+        {(user.first_name || user.last_name) && (
+          <span className="text-white/40 text-sm">{user.email}</span>
+        )}
       </div>
 
       {/* XP bar */}
       <div className="space-y-2">
-        <div className="flex justify-between text-sm text-white/70">
-          <span>{xpInLevel}/{xpNeeded} XP</span>
+        <div className="flex justify-end text-sm">
           <span className="font-semibold" style={{ color: "var(--color-accent-yellow)" }}>
             ★ {user.total_stars}
           </span>
@@ -81,7 +128,7 @@ function UserCard({ user, achievements }: { user: AuthUser; achievements: Achiev
               backgroundColor: "var(--color-accent-purple)",
             }}
           />
-          {/* Level badge — hexagon with level-color border, always centered */}
+          {/* Level badge */}
           <div
             className="absolute z-10"
             style={{
@@ -110,6 +157,9 @@ function UserCard({ user, achievements }: { user: AuthUser; achievements: Achiev
             </div>
           </div>
         </div>
+        <p className="text-xs text-white/40 text-center">
+          {xpInLevel} / {xpNeeded} XP до уровня {level + 1}
+        </p>
       </div>
 
       {/* Achievements */}
@@ -118,17 +168,30 @@ function UserCard({ user, achievements }: { user: AuthUser; achievements: Achiev
           {visibleAch.map((ua) => (
             <div
               key={ua.id}
-              title={ua.achievement.name}
-              className="w-9 h-9 rounded-full border-2 flex items-center justify-center text-xs font-bold text-white"
+              title={`Уровень ${ua.achievement.level}: ${ua.achievement.name}`}
+              className="w-9 h-9 rounded-full border-2 flex items-center justify-center text-xs font-bold text-white cursor-default select-none"
               style={{ borderColor: ua.achievement.color }}
             >
               {ua.achievement.level}
             </div>
           ))}
-          {extra > 0 && (
-            <div className="w-9 h-9 rounded-full border-2 border-white/30 flex items-center justify-center text-xs font-bold text-white/50">
-              +{extra}
-            </div>
+          {hasMore && (
+            <button
+              onClick={() => setAchExpanded(true)}
+              className="w-9 h-9 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-colors hover:border-white/60 hover:text-white/80"
+              style={{ borderColor: "rgba(255,255,255,0.3)", color: "rgba(255,255,255,0.5)" }}
+              title="Показать все достижения"
+            >
+              +{hiddenCount}
+            </button>
+          )}
+          {achExpanded && achievements.length > MAX_VISIBLE && (
+            <button
+              onClick={() => setAchExpanded(false)}
+              className="text-xs text-white/40 hover:text-white/70 transition-colors underline"
+            >
+              Свернуть
+            </button>
           )}
         </div>
       )}

@@ -32,6 +32,14 @@ const MENU_ITEMS = [
     href: "/topics",
     highlight: false,
   },
+  {
+    icon: "/images/landing/icon-reference.svg",
+    w: 20,
+    h: 18,
+    label: "Помощь",
+    href: "/help",
+    highlight: false,
+  },
 ];
 
 // ─── Компонент ───────────────────────────────────────────────────────────────
@@ -51,6 +59,7 @@ export function Header({
   const { isAuthenticated, user, logout, openLogin, openRegister } = useAuthStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   const avatarLetter =
     user?.first_name?.[0]?.toUpperCase() ||
@@ -64,10 +73,12 @@ export function Header({
       : []),
   ];
 
-  // Закрыть меню при клике вне (только десктоп/планшет)
+  // Закрыть меню при клике вне (десктоп: дропдаун + мобиль: оверлей)
   useEffect(() => {
     function onOutside(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+      const inDesktop = menuRef.current?.contains(e.target as Node);
+      const inMobile = mobileMenuRef.current?.contains(e.target as Node);
+      if (!inDesktop && !inMobile) {
         setIsMenuOpen(false);
       }
     }
@@ -81,7 +92,7 @@ export function Header({
   }, [isAuthenticated]);
 
   return (
-    <>
+    <div className="relative z-50">
       {/* ── Хедер ──────────────────────────────────────────────────────────── */}
       <header
         className={`w-full ${fullWidth ? "px-4 sm:px-6" : "px-4 sm:px-6 lg:px-16"} py-4 sm:py-5 lg:py-6`}
@@ -127,12 +138,16 @@ export function Header({
               aria-haspopup="true"
             >
               <span
-                className="w-10 h-10 rounded-full border-2 flex items-center justify-center"
+                className="w-10 h-10 rounded-full border-2 flex items-center justify-center overflow-hidden"
                 style={{ borderColor: "#FFFFFF", backgroundColor: "transparent" }}
               >
-                <span className="text-white font-bold text-base leading-none">
-                  {avatarLetter}
-                </span>
+                {user?.avatar ? (
+                  <img src={user.avatar} alt="avatar" className="w-full h-full object-cover rounded-full" />
+                ) : (
+                  <span className="text-white font-bold text-base leading-none">
+                    {avatarLetter}
+                  </span>
+                )}
               </span>
               <img
                 src="/images/landing/chevron-down.svg"
@@ -217,19 +232,20 @@ export function Header({
       {/* ── Мобильное меню — полная ширина под хедером (<sm) ───────────────── */}
       {isAuthenticated && isMenuOpen && (
         <div
-          className="sm:hidden w-full z-40"
-          style={{ backgroundColor: "#160D35" }}
+          ref={mobileMenuRef}
+          className="sm:hidden absolute top-full left-0 right-0 z-50 shadow-xl overflow-hidden"
+          style={{ backgroundColor: "#FFFFFF" }}
         >
           {menuItems.map((item, i) => (
             <Link
               key={item.href}
               href={item.href}
               onClick={() => setIsMenuOpen(false)}
-              className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-white/5"
+              className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-gray-100"
               style={{
                 borderBottom:
-                  i < MENU_ITEMS.length - 1
-                    ? "1px solid rgba(255,255,255,0.08)"
+                  i < menuItems.length - 1
+                    ? "1px solid rgba(0,0,0,0.08)"
                     : "none",
               }}
             >
@@ -239,17 +255,16 @@ export function Header({
                 width={item.w}
                 height={item.h}
                 aria-hidden
-                style={{ filter: "brightness(0) invert(1)", opacity: 0.8 }}
               />
-              <span className="text-sm font-medium text-white">{item.label}</span>
+              <span className="text-sm font-medium" style={{ color: "#1A1A2E" }}>{item.label}</span>
             </Link>
           ))}
           <div
             className="mx-5"
-            style={{ height: "1px", backgroundColor: "rgba(255,255,255,0.12)" }}
+            style={{ height: "1px", backgroundColor: "rgba(0,0,0,0.1)" }}
           />
           <button
-            className="flex items-center gap-4 px-5 py-4 w-full transition-colors hover:bg-white/5"
+            className="flex items-center gap-4 px-5 py-4 w-full transition-colors hover:bg-gray-100"
             onClick={() => { logout(); setIsMenuOpen(false); }}
           >
             <img
@@ -258,12 +273,11 @@ export function Header({
               width={19}
               height={20}
               aria-hidden
-              style={{ filter: "brightness(0) invert(1)", opacity: 0.8 }}
             />
-            <span className="text-sm font-medium text-white">Выйти</span>
+            <span className="text-sm font-medium" style={{ color: "#1A1A2E" }}>Выйти</span>
           </button>
         </div>
       )}
-    </>
+    </div>
   );
 }

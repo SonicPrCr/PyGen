@@ -11,11 +11,11 @@ export function AdminHeader({
 }) {
   return (
     <div
-      className="flex items-center justify-between px-8 py-6"
+      className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 sm:py-6 gap-3"
       style={{ borderBottom: "1px solid var(--color-border)" }}
     >
       <h1
-        className="text-2xl font-black text-white"
+        className="text-xl sm:text-2xl font-black text-white"
         style={{ fontFamily: "var(--font-heading)" }}
       >
         {title}

@@ -109,7 +109,20 @@ class MeView(APIView):
         responses={200: UserSerializer},
     )
     def get(self, request):
-        return Response(UserSerializer(request.user).data)
+        return Response(UserSerializer(request.user, context={'request': request}).data)
+
+    @extend_schema(
+        summary='Обновить профиль текущего пользователя (аватар, имя, возраст)',
+        responses={200: UserSerializer},
+    )
+    def patch(self, request):
+        user = request.user
+        ALLOWED = {'avatar', 'first_name', 'last_name', 'middle_name', 'age'}
+        data = {k: v for k, v in request.data.items() if k in ALLOWED}
+        serializer = UserSerializer(user, data=data, partial=True, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(UserSerializer(user, context={'request': request}).data)
 
 
 # ─── Admin user views ─────────────────────────────────────────────────────────

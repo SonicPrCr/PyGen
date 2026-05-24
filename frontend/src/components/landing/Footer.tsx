@@ -6,6 +6,7 @@ const NAV_LINKS = [
   { label: "Курсы",      href: "/topics" },
   { label: "Профиль",    href: "/profile" },
   { label: "Справочник", href: "/reference" },
+  { label: "Помощь",     href: "/help" },
 ];
 
 const SOCIALS = [
