@@ -40,11 +40,13 @@ export function Header({
   fullWidth = false,
   logoSrc,
   onBurgerClick,
+  bgColor,
 }: {
   showBurger?: boolean;
   fullWidth?: boolean;
   logoSrc?: string;
   onBurgerClick?: () => void;
+  bgColor?: string;
 }) {
   const { isAuthenticated, user, logout, openLogin, openRegister } = useAuthStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -84,7 +86,7 @@ export function Header({
       <header
         className={`w-full ${fullWidth ? "px-4 sm:px-6" : "px-4 sm:px-6 lg:px-16"} py-4 sm:py-5 lg:py-6`}
         style={{
-          backgroundColor: "var(--color-bg-primary)",
+          backgroundColor: bgColor ?? "var(--color-bg-primary)",
           borderBottom: fullWidth ? "1px solid rgba(255,255,255,0.08)" : "none",
         }}
       >

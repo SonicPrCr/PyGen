@@ -59,6 +59,7 @@ export function LessonLayoutClient({ lessonId, children }: Props) {
         showBurger
         fullWidth
         logoSrc="/images/landing/logo-lesson.png"
+        bgColor="#29292F"
         onBurgerClick={() => {
           // Desktop: toggle left sidebar; Mobile: open overlay
           if (window.innerWidth >= 1024) {
@@ -76,7 +77,7 @@ export function LessonLayoutClient({ lessonId, children }: Props) {
           className="hidden lg:flex flex-col shrink-0 transition-all duration-200 overflow-hidden"
           style={{
             width: leftOpen ? 272 : 0,
-            backgroundColor: "#1A1537",
+            backgroundColor: "#3C3F41",
             borderRight: leftOpen ? "1px solid rgba(255,255,255,0.08)" : "none",
             overflowY: leftOpen ? "auto" : "hidden",
           }}
@@ -97,7 +98,7 @@ export function LessonLayoutClient({ lessonId, children }: Props) {
             <aside
               className="relative z-10 w-72 flex flex-col"
               style={{
-                backgroundColor: "#1A1537",
+                backgroundColor: "#3C3F41",
                 borderRight: "1px solid rgba(255,255,255,0.08)",
                 overflowY: "auto",
               }}
@@ -137,10 +138,10 @@ export function LessonLayoutClient({ lessonId, children }: Props) {
 
         {/* ── Right panel (icon strip + expandable content) ──────── */}
         <aside
-          className="hidden lg:flex transition-all duration-200 overflow-hidden shrink-0"
+          className="flex transition-all duration-200 overflow-hidden shrink-0"
           style={{
             width: rightPanelOpen ? 380 : 60,
-            borderLeft: "1px solid var(--color-border)",
+            borderLeft: "1px solid rgba(255,255,255,0.08)",
           }}
         >
           {/* Icon strip (always visible, left side of right panel) */}
@@ -148,13 +149,13 @@ export function LessonLayoutClient({ lessonId, children }: Props) {
             className="flex flex-col items-center gap-2 p-2 shrink-0"
             style={{
               width: 60,
-              backgroundColor: "var(--color-bg-primary)",
-              borderRight: rightPanelOpen ? "1px solid var(--color-border)" : "none",
+              backgroundColor: "#3C3F41",
+              borderRight: rightPanelOpen ? "1px solid rgba(255,255,255,0.08)" : "none",
             }}
           >
             <button
               onClick={() => setRightPanelOpen((v) => !v)}
-              className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/5 transition-colors mb-1 text-white/40 hover:text-white/70"
+              className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/5 transition-colors mb-1 text-white/50 hover:text-white/90"
               title={rightPanelOpen ? "Свернуть панель" : "Развернуть панель"}
             >
               {rightPanelOpen ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
@@ -192,13 +193,13 @@ export function LessonLayoutClient({ lessonId, children }: Props) {
               className="flex flex-col overflow-hidden"
               style={{
                 width: 320,
-                backgroundColor: "var(--color-bg-secondary)",
+                backgroundColor: "#303234",
               }}
             >
               {/* Panel header */}
               <div
                 className="px-4 py-3 shrink-0 flex items-center"
-                style={{ borderBottom: "1px solid var(--color-border)" }}
+                style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}
               >
                 <span className="font-semibold text-sm text-white">
                   {TAB_LABELS[activeTab]}

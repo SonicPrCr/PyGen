@@ -88,7 +88,7 @@ function PyodideLoader({ error }: { error: string | null }) {
 
 // ─── Test results panel ───────────────────────────────────────────────────────
 
-function TestResultsPanel({
+function OutputContent({
   results,
   stdout,
   stderr,
@@ -99,15 +99,16 @@ function TestResultsPanel({
   stderr: string;
   aiHint: string | null;
 }) {
-  if (!results && !stdout && !stderr && !aiHint) return null;
+  if (!results && !stdout && !stderr && !aiHint) {
+    return (
+      <p className="text-xs font-mono" style={{ color: "rgba(255,255,255,0.2)" }}>
+        Нажми «Проверить» чтобы запустить код...
+      </p>
+    );
+  }
 
   return (
-    <div
-      className="rounded-xl p-4 space-y-3"
-      style={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
-    >
-      <p className="text-xs font-bold uppercase tracking-widest text-white/40">Результат</p>
-
+    <div className="space-y-3">
       {/* Raw output */}
       {(stdout || stderr) && !results && (
         <div className="font-mono text-sm space-y-1">
@@ -162,7 +163,6 @@ function TestResultsPanel({
             borderLeft: "4px solid var(--color-accent-purple)",
             padding: "12px 16px",
             borderRadius: "8px",
-            marginTop: "12px",
           }}
         >
           <p className="font-bold text-white mb-1">💡 Подсказка от ИИ:</p>
@@ -463,42 +463,90 @@ export default function LessonEditorPage() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-col flex-1 px-4 lg:px-6 py-6 gap-4 w-full">
+    <div className="flex flex-col flex-1 w-full overflow-hidden">
 
       {/* ── Monaco Editor ──────────────────────────────────────────────────── */}
-      <div
-        className="rounded-xl overflow-hidden"
-        style={{ border: "1px solid rgba(255,255,255,0.1)" }}
-      >
+      <div className="flex-1 overflow-hidden flex flex-col" style={{ minHeight: 0 }}>
+        {/* Плашка main.py */}
         <div
-          className="flex items-center gap-2 px-3 py-1.5"
-          style={{ backgroundColor: "#1e1e2e", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
-        >
-          <span className="text-xs text-white/30 font-mono">main.py</span>
-          <span className="ml-auto text-xs text-white/20">Python 3</span>
-        </div>
-        <MonacoEditor
-          height="340px"
-          defaultLanguage="python"
-          theme="vs-dark"
-          value={code}
-          onChange={(val) => setCode(val ?? "")}
-          options={{
-            minimap: { enabled: false },
-            fontSize: 14,
-            scrollBeyondLastLine: false,
-            automaticLayout: true,
-            lineNumbers: "on",
-            renderLineHighlight: "gutter",
-            padding: { top: 12, bottom: 12 },
-            fontFamily: "'JetBrains Mono', 'Fira Code', 'Courier New', monospace",
-            fontLigatures: true,
+          className="flex items-center px-4 py-2 shrink-0"
+          style={{
+            backgroundColor: "#29292F",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
           }}
-        />
+        >
+          <span className="text-xs text-white/40 font-mono">main.py</span>
+          <span className="ml-auto text-xs text-white/25 font-mono">Python 3</span>
+        </div>
+        <div className="flex-1 relative" style={{ minHeight: 0, backgroundColor: "#222328" }}>
+          <MonacoEditor
+            height="100%"
+            defaultLanguage="python"
+            value={code}
+            onChange={(val) => setCode(val ?? "")}
+            onMount={(editor, monaco) => {
+              monaco.editor.defineTheme("pygen-dark", {
+                base: "vs-dark",
+                inherit: true,
+                rules: [],
+                colors: {
+                  "editor.background": "#222328",
+                  "editor.lineHighlightBackground": "#2a2830",
+                  "editorLineNumber.foreground": "#4a4a5a",
+                  "editorLineNumber.activeForeground": "#8878cc",
+                },
+              });
+              monaco.editor.setTheme("pygen-dark");
+            }}
+            options={{
+              minimap: { enabled: false },
+              fontSize: 14,
+              scrollBeyondLastLine: false,
+              automaticLayout: true,
+              lineNumbers: "on",
+              renderLineHighlight: "gutter",
+              padding: { top: 12, bottom: 12 },
+              fontFamily: "'JetBrains Mono', 'Fira Code', 'Courier New', monospace",
+              fontLigatures: true,
+            }}
+          />
+        </div>
       </div>
 
-      {/* ── Results panel ──────────────────────────────────────────────────── */}
-      <TestResultsPanel results={testResults} stdout={stdout} stderr={stderr} aiHint={aiHint} />
+      {/* ── Bottom output panel ── */}
+      <div
+        className="shrink-0 flex flex-col"
+        style={{
+          height: 180,
+          borderTop: "1px solid rgba(255,255,255,0.08)",
+        }}
+      >
+        <div
+          className="flex items-center px-4 shrink-0"
+          style={{
+            height: 36,
+            backgroundColor: "#3C3F41",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+          }}
+        >
+          <span className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.6)" }}>
+            Результат
+          </span>
+        </div>
+        <div
+          className="flex-1 overflow-y-auto px-4 py-3"
+          style={{ backgroundColor: "#211F22" }}
+        >
+          <OutputContent
+            results={testResults}
+            stdout={stdout}
+            stderr={stderr}
+            aiHint={aiHint}
+          />
+        </div>
+      </div>
+
+
     </div>
   );
 }

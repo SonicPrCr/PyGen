@@ -223,12 +223,12 @@ export default function LessonTheoryPage() {
   const isLastLesson = !nextLesson;
 
   return (
-    <div className="flex-1 px-4 lg:px-8 py-6 lg:py-10">
+    <div className="flex-1 px-4 lg:px-8 py-6 lg:py-10" style={{ backgroundColor: "#222328" }}>
       <div className="max-w-4xl mx-auto">
         <div
           className="rounded-2xl p-6 sm:p-8 lg:p-12"
           style={{
-            backgroundColor: "var(--color-bg-secondary)",
+            backgroundColor: "#3B393C",
             boxShadow: "0 0 40px rgba(105, 94, 176, 0.15)",
             border: "1px solid var(--color-border)",
           }}
