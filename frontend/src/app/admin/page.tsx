@@ -8,6 +8,10 @@ interface Stats {
   themes: number;
   lessons: number;
   users: number;
+  solutions: number;
+  generations: number;
+  bookmarks: number;
+  notes: number;
 }
 
 export default function AdminDashboard() {
@@ -19,13 +23,21 @@ export default function AdminDashboard() {
     Promise.all([
       api.get("/api/admin/themes"),
       api.get("/api/admin/users"),
-    ]).then(([themes, users]) => {
+      api.get("/api/admin/user-solutions"),
+      api.get("/api/admin/task-generations"),
+      api.get("/api/admin/bookmarks"),
+      api.get("/api/admin/notes"),
+    ]).then(([themes, users, solutions, generations, bookmarks, notes]) => {
       const themeList = themes.data as Array<{ lessons_count: number }>;
       const lessonTotal = themeList.reduce((s, t) => s + (t.lessons_count ?? 0), 0);
       setStats({
         themes: themeList.length,
         lessons: lessonTotal,
         users: (users.data as unknown[]).length,
+        solutions: (solutions.data as unknown[]).length,
+        generations: (generations.data as unknown[]).length,
+        bookmarks: (bookmarks.data as unknown[]).length,
+        notes: (notes.data as unknown[]).length,
       });
     }).catch(() => {});
   }, [isAdmin]);
@@ -33,9 +45,13 @@ export default function AdminDashboard() {
   if (!isInitialized || !isAdmin) return null;
 
   const cards = [
-    { label: "Тем", value: stats?.themes, icon: "📚" },
-    { label: "Уроков", value: stats?.lessons, icon: "📝" },
-    { label: "Пользователей", value: stats?.users, icon: "👥" },
+    { label: "Тем",           value: stats?.themes,      icon: "📚" },
+    { label: "Уроков",        value: stats?.lessons,     icon: "🎓" },
+    { label: "Пользователей", value: stats?.users,       icon: "👥" },
+    { label: "Решений",       value: stats?.solutions,   icon: "💻" },
+    { label: "Генераций ИИ",  value: stats?.generations, icon: "🤖" },
+    { label: "Закладок",      value: stats?.bookmarks,   icon: "🔖" },
+    { label: "Конспектов",    value: stats?.notes,       icon: "📝" },
   ];
 
   return (
@@ -47,11 +63,11 @@ export default function AdminDashboard() {
         Дашборд
       </h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         {cards.map((card) => (
           <div
             key={card.label}
-            className="rounded-xl p-6 flex flex-col gap-3"
+            className="rounded-xl p-5 flex flex-col gap-3"
             style={{
               backgroundColor: "var(--color-bg-secondary)",
               border: "1px solid var(--color-border)",
@@ -60,12 +76,12 @@ export default function AdminDashboard() {
             <span className="text-3xl">{card.icon}</span>
             <div>
               <p
-                className="text-4xl font-black text-white"
+                className="text-3xl sm:text-4xl font-black text-white"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
-                {stats ? card.value : "—"}
+                {stats ? (card.value ?? 0) : "—"}
               </p>
-              <p className="text-sm mt-1" style={{ color: "var(--color-text-muted)" }}>
+              <p className="text-xs sm:text-sm mt-1" style={{ color: "var(--color-text-muted)" }}>
                 {card.label}
               </p>
             </div>

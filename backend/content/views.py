@@ -8,6 +8,7 @@ from .serializers import (
     BookmarkSerializer, NoteSerializer,
     ReferenceCategorySerializer, ReferenceArticleSerializer,
     ReferenceArticleAdminSerializer,
+    BookmarkAdminSerializer, NoteAdminSerializer,
 )
 
 
@@ -86,4 +87,28 @@ class ReferenceArticleAdminCreateView(generics.CreateAPIView):
 class ReferenceArticleAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = ReferenceArticle.objects.select_related('category')
     serializer_class = ReferenceArticleAdminSerializer
+    permission_classes = [IsAdminUser]
+
+
+# ── Admin: Bookmarks & Notes ─────────────────────────────────────────────────
+
+class BookmarkAdminListView(generics.ListAPIView):
+    serializer_class = BookmarkAdminSerializer
+    permission_classes = [IsAdminUser]
+    queryset = Bookmark.objects.select_related('user', 'lesson').order_by('-created_at')
+
+
+class BookmarkAdminDeleteView(generics.DestroyAPIView):
+    queryset = Bookmark.objects.all()
+    permission_classes = [IsAdminUser]
+
+
+class NoteAdminListView(generics.ListAPIView):
+    serializer_class = NoteAdminSerializer
+    permission_classes = [IsAdminUser]
+    queryset = Note.objects.select_related('user').order_by('-updated_at')
+
+
+class NoteAdminDeleteView(generics.DestroyAPIView):
+    queryset = Note.objects.all()
     permission_classes = [IsAdminUser]

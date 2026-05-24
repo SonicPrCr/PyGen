@@ -10,6 +10,7 @@ interface EditorPanelStore {
   isLoadingHint: boolean;
   canProceed: boolean;
   remainingGenerations: number;
+  resetInSeconds: number | null;
   lastCheckFailed: boolean;
   nextLessonLabel: string;
   onCheck: (() => void) | null;
@@ -30,6 +31,7 @@ const defaults: Omit<EditorPanelStore, "update" | "reset"> = {
   isLoadingHint: false,
   canProceed: false,
   remainingGenerations: 3,
+  resetInSeconds: null,
   lastCheckFailed: false,
   nextLessonLabel: "Дальше →",
   onCheck: null,

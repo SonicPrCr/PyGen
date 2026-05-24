@@ -9,6 +9,15 @@ import { useEditorPanelStore } from "@/lib/stores/editorPanelStore";
 import { useAuthStore } from "@/lib/stores/authStore";
 import api from "@/lib/api";
 
+function formatCountdown(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) return `${h}ч ${m}м`;
+  if (m > 0) return `${m}м ${s}с`;
+  return `${s}с`;
+}
+
 interface Props {
   previewLessonId: string;
 }
@@ -204,16 +213,23 @@ export function LessonsPanel({ previewLessonId }: Props) {
                 </button>
               )}
 
-              <button
-                onClick={() => store.onGenerate?.()}
-                disabled={store.isGenerating || store.isRunning}
-                className="w-full py-2 rounded-lg text-xs font-semibold disabled:opacity-40 flex items-center justify-center gap-2 transition-colors"
-                style={{ backgroundColor: "rgba(255,219,58,0.08)", color: "var(--color-accent-yellow)", border: "1px solid rgba(255,219,58,0.2)" }}
-              >
-                {store.isGenerating
-                  ? <span className="w-3 h-3 rounded-full border-2 border-t-transparent border-yellow-400 animate-spin" />
-                  : "✦"} Генерация ({store.remainingGenerations})
-              </button>
+              <div className="flex flex-col gap-1">
+                <button
+                  onClick={() => store.onGenerate?.()}
+                  disabled={store.isGenerating || store.isRunning || store.remainingGenerations === 0}
+                  className="w-full py-2 rounded-lg text-xs font-semibold disabled:opacity-40 flex items-center justify-center gap-2 transition-colors"
+                  style={{ backgroundColor: "rgba(255,219,58,0.08)", color: "var(--color-accent-yellow)", border: "1px solid rgba(255,219,58,0.2)" }}
+                >
+                  {store.isGenerating
+                    ? <span className="w-3 h-3 rounded-full border-2 border-t-transparent border-yellow-400 animate-spin" />
+                    : "✦"} Генерация ({store.remainingGenerations})
+                </button>
+                {store.remainingGenerations === 0 && store.resetInSeconds !== null && (
+                  <p className="text-xs text-center" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    Сброс через {formatCountdown(store.resetInSeconds)}
+                  </p>
+                )}
+              </div>
 
               <button
                 onClick={() => store.onNext?.()}

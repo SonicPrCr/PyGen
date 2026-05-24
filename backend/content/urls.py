@@ -15,4 +15,8 @@ admin_urlpatterns = [
     path('admin/reference/categories/<int:pk>', views.ReferenceCategoryAdminDetailView.as_view(),     name='admin-ref-category-detail'),
     path('admin/reference/articles',            views.ReferenceArticleAdminCreateView.as_view(),      name='admin-ref-article-create'),
     path('admin/reference/articles/<int:pk>',   views.ReferenceArticleAdminDetailView.as_view(),      name='admin-ref-article-detail'),
+    path('admin/bookmarks',                     views.BookmarkAdminListView.as_view(),                name='admin-bookmarks'),
+    path('admin/bookmarks/<int:pk>',            views.BookmarkAdminDeleteView.as_view(),              name='admin-bookmark-delete'),
+    path('admin/notes',                         views.NoteAdminListView.as_view(),                    name='admin-notes'),
+    path('admin/notes/<int:pk>',                views.NoteAdminDeleteView.as_view(),                  name='admin-note-delete'),
 ]

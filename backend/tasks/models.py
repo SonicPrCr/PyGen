@@ -38,9 +38,10 @@ class UserSolution(models.Model):
 
 
 class UserTaskGeneration(models.Model):
-    user  = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='task_generations')
-    theme = models.ForeignKey('lessons.Theme', on_delete=models.CASCADE, related_name='task_generations')
-    count = models.PositiveIntegerField('Кол-во сгенерированных', default=0)
+    user              = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='task_generations')
+    theme             = models.ForeignKey('lessons.Theme', on_delete=models.CASCADE, related_name='task_generations')
+    count             = models.PositiveIntegerField('Кол-во сгенерированных', default=0)
+    last_generated_at = models.DateTimeField('Последняя генерация', null=True, blank=True)
 
     class Meta:
         unique_together = ('user', 'theme')

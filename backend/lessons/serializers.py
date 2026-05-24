@@ -187,3 +187,14 @@ class ThemeAdminSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class UserProgressAdminSerializer(serializers.ModelSerializer):
+    user_email = serializers.CharField(source='user.email', read_only=True)
+    lesson_title = serializers.CharField(source='lesson.title', read_only=True)
+    theme_title = serializers.CharField(source='lesson.theme.title', read_only=True)
+
+    class Meta:
+        model = UserProgress
+        fields = ['id', 'user_email', 'lesson_title', 'theme_title',
+                  'completed', 'stars_earned', 'attempts', 'completed_at']

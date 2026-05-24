@@ -3,8 +3,11 @@ import sys
 import tempfile
 import os
 import logging
+from datetime import timedelta
 
 from celery.result import AsyncResult
+from django.conf import settings
+from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -13,7 +16,10 @@ from drf_spectacular.utils import extend_schema
 
 from lessons.models import Theme
 from .models import Task, UserSolution, UserTaskGeneration
-from .serializers import TaskSerializer, CheckCodeSerializer
+from .serializers import (
+    TaskSerializer, CheckCodeSerializer,
+    UserSolutionAdminSerializer, UserTaskGenerationAdminSerializer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -186,6 +192,44 @@ class TaskHintView(APIView):
         return Response({'hint': hint})
 
 
+class UserGenerationStatusView(APIView):
+    """GET /api/tasks/generation-status?theme_id=<id> — счётчик генераций текущего пользователя."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        theme_id = request.query_params.get('theme_id')
+        if not theme_id:
+            return Response({'error': 'Укажите theme_id'}, status=status.HTTP_400_BAD_REQUEST)
+
+        limit = settings.DEEPSEEK_GENERATION_LIMIT
+
+        try:
+            usage = UserTaskGeneration.objects.get(user=request.user, theme_id=theme_id)
+
+            # Автосброс если прошло 24 часа
+            if usage.last_generated_at is not None:
+                if timezone.now() - usage.last_generated_at >= timedelta(hours=24):
+                    usage.count = 0
+                    usage.last_generated_at = None
+                    usage.save()
+
+            remaining = max(0, limit - usage.count)
+
+            reset_in = None
+            if usage.last_generated_at and usage.count >= limit:
+                elapsed = (timezone.now() - usage.last_generated_at).total_seconds()
+                reset_in = max(0.0, 86400.0 - elapsed)
+
+        except UserTaskGeneration.DoesNotExist:
+            remaining = limit
+            reset_in = None
+
+        return Response({
+            'remaining_generations': remaining,
+            'reset_in_seconds': reset_in,
+        })
+
+
 class TaskAdminListView(generics.ListAPIView):
     """GET /api/admin/tasks[?theme=<id>] — список заданий из пула."""
     serializer_class = TaskSerializer
@@ -204,6 +248,36 @@ class TaskAdminDetailView(generics.DestroyAPIView):
     queryset = Task.objects.filter(is_pregenerated=True)
     serializer_class = TaskSerializer
     permission_classes = [IsAdminUser]
+
+
+class UserSolutionAdminListView(generics.ListAPIView):
+    serializer_class = UserSolutionAdminSerializer
+    permission_classes = [IsAdminUser]
+    queryset = UserSolution.objects.select_related('user', 'task').order_by('-created_at')
+
+
+class UserSolutionAdminDeleteView(generics.DestroyAPIView):
+    queryset = UserSolution.objects.all()
+    permission_classes = [IsAdminUser]
+
+
+class UserTaskGenerationAdminListView(generics.ListAPIView):
+    serializer_class = UserTaskGenerationAdminSerializer
+    permission_classes = [IsAdminUser]
+    queryset = UserTaskGeneration.objects.select_related('user', 'theme').order_by('-count')
+
+
+class UserTaskGenerationAdminResetView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def post(self, request, pk):
+        try:
+            obj = UserTaskGeneration.objects.get(pk=pk)
+            obj.count = 0
+            obj.save()
+            return Response({'message': 'Счётчик сброшен'})
+        except UserTaskGeneration.DoesNotExist:
+            return Response({'error': 'Не найдено'}, status=status.HTTP_404_NOT_FOUND)
 
 
 def _run_code(code: str, stdin_data: str) -> tuple[str, str]:

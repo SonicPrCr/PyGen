@@ -13,6 +13,10 @@ const nunitoSans = Nunito_Sans({
 export const metadata: Metadata = {
   title: "PyGen — Учи Python интерактивно",
   description: "Интерактивная платформа для изучения Python с автогенерацией заданий",
+  icons: {
+    icon: "/favicon.png",
+    shortcut: "/favicon.png",
+  },
 };
 
 export default function RootLayout({

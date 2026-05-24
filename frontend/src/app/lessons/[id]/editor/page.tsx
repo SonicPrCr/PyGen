@@ -193,6 +193,7 @@ export default function LessonEditorPage() {
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
   const [taskSource, setTaskSource] = useState<"ai" | "pool" | null>(null);
   const [remainingGenerations, setRemainingGenerations] = useState(3);
+  const [resetInSeconds, setResetInSeconds] = useState<number | null>(null);
   const [justPassed, setJustPassed] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [lastCheckFailed, setLastCheckFailed] = useState(false);
@@ -210,6 +211,19 @@ export default function LessonEditorPage() {
     setLastCheckFailed(false);
     setAiHint(null);
   }, [id]);
+
+  // Загрузка счётчика генераций с сервера (сохраняется после перезагрузки)
+  useEffect(() => {
+    if (!lesson?.theme) return;
+    api.get(`/api/tasks/generation-status?theme_id=${lesson.theme}`)
+      .then(({ data }) => {
+        setRemainingGenerations(data.remaining_generations);
+        if (data.reset_in_seconds != null) {
+          setResetInSeconds(Math.ceil(data.reset_in_seconds));
+        }
+      })
+      .catch((err) => console.error("generation-status fetch failed:", err));
+  }, [lesson?.theme]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Init code from lesson starter_code
   useEffect(() => {
@@ -303,6 +317,23 @@ export default function LessonEditorPage() {
     }
   }, [lesson, code, currentTask, isReady, runCode, id, queryClient, isRunning]);
 
+  // ── Countdown timer for generation reset ───────────────────────────────────
+
+  useEffect(() => {
+    if (!resetInSeconds || resetInSeconds <= 0) return;
+    const timer = setInterval(() => {
+      setResetInSeconds((prev) => {
+        if (!prev || prev <= 1) {
+          clearInterval(timer);
+          setRemainingGenerations(3);
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resetInSeconds]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Generate task via AI (async with polling) ───────────────────────────────
 
   const handleGenerateTask = async () => {
@@ -327,6 +358,11 @@ export default function LessonEditorPage() {
           setCurrentTask(statusData.task as Task);
           setTaskSource(statusData.source);
           setRemainingGenerations(statusData.remaining_generations);
+          setResetInSeconds(
+            statusData.reset_in_seconds != null
+              ? Math.ceil(statusData.reset_in_seconds)
+              : null
+          );
           setCode(statusData.task.starter_code || "# Напиши код здесь\n");
           setTestResults(null);
           setStdout("");
@@ -338,6 +374,9 @@ export default function LessonEditorPage() {
           alert(statusData.error || "Не удалось сгенерировать задание");
           if (statusData.remaining_generations !== undefined) {
             setRemainingGenerations(statusData.remaining_generations);
+          }
+          if (statusData.reset_in_seconds != null) {
+            setResetInSeconds(Math.ceil(statusData.reset_in_seconds));
           }
           return;
         }
@@ -432,11 +471,12 @@ export default function LessonEditorPage() {
       isLoadingHint,
       canProceed,
       remainingGenerations,
+      resetInSeconds,
       lastCheckFailed,
       nextLessonLabel: !nextLesson ? "Завершить тему" : "Дальше →",
     });
   }, [currentTask, taskSource, aiHint, isRunning, isGenerating, isLoadingHint,
-      canProceed, remainingGenerations, lastCheckFailed, nextLesson, panelUpdate]);
+      canProceed, remainingGenerations, resetInSeconds, lastCheckFailed, nextLesson, panelUpdate]);
 
   // ── Guards ──────────────────────────────────────────────────────────────────
 

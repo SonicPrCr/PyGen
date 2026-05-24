@@ -13,4 +13,6 @@ urlpatterns = [
     path('admin/themes/<int:pk>',           views.ThemeAdminDetailView.as_view(),      name='admin-theme-detail'),
     path('admin/lessons',                   views.LessonAdminCreateView.as_view(),     name='admin-lesson-create'),
     path('admin/lessons/<int:pk>',          views.LessonAdminDetailView.as_view(),     name='admin-lesson-detail'),
+    path('admin/user-progress',             views.UserProgressAdminListView.as_view(), name='admin-user-progress'),
+    path('admin/user-progress/<int:pk>',    views.UserProgressAdminDeleteView.as_view(), name='admin-user-progress-delete'),
 ]

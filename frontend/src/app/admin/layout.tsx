@@ -7,12 +7,19 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { useRequireAdmin } from "@/lib/hooks/useRequireAdmin";
 
-const NAV_ITEMS = [
-  { href: "/admin",           label: "Дашборд",       icon: "📊" },
-  { href: "/admin/themes",    label: "Темы курса",     icon: "📚" },
-  { href: "/admin/users",     label: "Пользователи",   icon: "👥" },
-  { href: "/admin/reference", label: "Справочник",     icon: "📖" },
-  { href: "/admin/tasks",     label: "Пул заданий",    icon: "🎯" },
+const NAV_ITEMS: { href: string; label: string; icon: string; dividerBefore?: boolean }[] = [
+  { href: "/admin",                   label: "Дашборд",       icon: "📊" },
+  { href: "/admin/themes",            label: "Темы курса",    icon: "📚" },
+  { href: "/admin/users",             label: "Пользователи",  icon: "👥" },
+  { href: "/admin/reference",         label: "Справочник",    icon: "📖" },
+  { href: "/admin/tasks",             label: "Пул заданий",   icon: "🎯" },
+  { href: "/admin/achievements",      label: "Ачивки",        icon: "🏆", dividerBefore: true },
+  { href: "/admin/user-achievements", label: "Ачивки юзеров", icon: "🎖️" },
+  { href: "/admin/user-progress",     label: "Прогресс",      icon: "📈" },
+  { href: "/admin/user-solutions",    label: "Решения",       icon: "💻" },
+  { href: "/admin/task-generations",  label: "Генерации ИИ",  icon: "🤖" },
+  { href: "/admin/bookmarks",         label: "Закладки",      icon: "🔖" },
+  { href: "/admin/notes",             label: "Конспекты",     icon: "📝" },
 ];
 
 function SidebarNav({
@@ -68,20 +75,27 @@ function SidebarNav({
               ? pathname === "/admin"
               : pathname.startsWith(item.href);
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onNavigate}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors"
-              style={{
-                backgroundColor: isActive ? "rgba(105,94,176,0.2)" : "transparent",
-                color: isActive ? "#fff" : "var(--color-text-secondary)",
-                fontWeight: isActive ? 600 : 400,
-              }}
-            >
-              <span className="text-base">{item.icon}</span>
-              <span>{item.label}</span>
-            </Link>
+            <div key={item.href}>
+              {item.dividerBefore && (
+                <div
+                  className="h-px mx-3 my-2"
+                  style={{ backgroundColor: "var(--color-border)" }}
+                />
+              )}
+              <Link
+                href={item.href}
+                onClick={onNavigate}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors"
+                style={{
+                  backgroundColor: isActive ? "rgba(105,94,176,0.2)" : "transparent",
+                  color: isActive ? "#fff" : "var(--color-text-secondary)",
+                  fontWeight: isActive ? 600 : 400,
+                }}
+              >
+                <span className="text-base">{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            </div>
           );
         })}
       </nav>

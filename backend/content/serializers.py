@@ -54,3 +54,21 @@ class ReferenceCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ReferenceCategory
         fields = ['id', 'title', 'order', 'articles']
+
+
+class BookmarkAdminSerializer(serializers.ModelSerializer):
+    user_email = serializers.CharField(source='user.email', read_only=True)
+    lesson_title = serializers.CharField(source='lesson.title', read_only=True)
+    lesson_id = serializers.IntegerField(source='lesson.id', read_only=True)
+
+    class Meta:
+        model = Bookmark
+        fields = ['id', 'user_email', 'lesson_title', 'lesson_id', 'created_at']
+
+
+class NoteAdminSerializer(serializers.ModelSerializer):
+    user_email = serializers.CharField(source='user.email', read_only=True)
+
+    class Meta:
+        model = Note
+        fields = ['id', 'user_email', 'title', 'created_at', 'updated_at']

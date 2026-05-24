@@ -8,7 +8,7 @@ from drf_spectacular.utils import extend_schema
 from .models import Theme, Lesson, UserProgress
 from .serializers import (
     ThemeListSerializer, ThemeDetailSerializer, LessonDetailSerializer,
-    ThemeAdminSerializer, LessonAdminSerializer,
+    ThemeAdminSerializer, LessonAdminSerializer, UserProgressAdminSerializer,
 )
 
 
@@ -114,4 +114,19 @@ class LessonAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
     """GET + PUT + PATCH + DELETE /api/admin/lessons/{pk}."""
     queryset = Lesson.objects.select_related('theme')
     serializer_class = LessonAdminSerializer
+    permission_classes = [IsAdminUser]
+
+
+class UserProgressAdminListView(generics.ListAPIView):
+    serializer_class = UserProgressAdminSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        return UserProgress.objects.select_related(
+            'user', 'lesson', 'lesson__theme'
+        ).order_by('-completed_at')
+
+
+class UserProgressAdminDeleteView(generics.DestroyAPIView):
+    queryset = UserProgress.objects.all()
     permission_classes = [IsAdminUser]
