@@ -9,7 +9,7 @@ export interface LessonDetail {
   title: string;
   order: number;
   lesson_type: "theory" | "practice";
-  content: { markdown: string };
+  content: { markdown?: string; type?: string; [key: string]: unknown };
   starter_code: string;
   test_cases: Array<{ input: string; expected_output: string }>;
   xp_reward: number;

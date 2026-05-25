@@ -11,10 +11,7 @@ const schema = z.object({
   first_name:  z.string().min(1, "Введите имя"),
   last_name:   z.string().min(1, "Введите фамилию"),
   middle_name: z.string().optional(),
-  age:         z.preprocess(
-    (v) => (v === "" || v === undefined ? undefined : Number(v)),
-    z.number({ invalid_type_error: "Введите число" }).int().min(1).max(120).optional()
-  ),
+  age:         z.number({ error: "Введите число" }).int().min(1).max(120).optional(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -99,7 +96,12 @@ export function RegisterForm() {
           <input {...register("middle_name")} type="text" autoComplete="additional-name" className={inputCls} />
         </Field>
         <Field label="Возраст" error={errors.age?.message}>
-          <input {...register("age")} type="number" min={1} max={120} className={inputCls} />
+          <input
+              {...register("age", {
+                setValueAs: (v) => (v === "" || v === undefined ? undefined : Number(v)),
+              })}
+              type="number" min={1} max={120} className={inputCls}
+            />
         </Field>
       </div>
 
