@@ -1,0 +1,64 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: pygen_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: pygen_db
+      POSTGRES_USER: pygen_user
+      POSTGRES_PASSWORD: pygen_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - pygen_net
+
+  redis:
+    image: redis:7-alpine
+    container_name: pygen_redis
+    restart: unless-stopped
+    networks:
+      - pygen_net
+
+  backend:
+    build:
+      context: ./backend
+    container_name: pygen_backend
+    restart: unless-stopped
+    command: sh -c "python manage.py migrate && python manage.py collectstatic --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 120"
+    volumes:
+      - ./backend:/app
+      - /home/pygen/app/PyGen/backend/staticfiles:/app/staticfiles
+      - /home/pygen/app/PyGen/backend/media:/app/media
+    env_file:
+      - ./backend/.env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - pygen_net
+
+  celery:
+    build:
+      context: ./backend
+    container_name: pygen_celery
+    restart: unless-stopped
+    command: celery -A config worker --loglevel=info --concurrency=2
+    volumes:
+      - ./backend:/app
+      - /home/pygen/app/PyGen/backend/media:/app/media
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - pygen_net
+
+volumes:
+  postgres_data:
+
+networks:
+  pygen_net:
+    driver: bridge

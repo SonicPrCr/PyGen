@@ -116,10 +116,27 @@ USE_TZ = True
 # -----------------------------------------------------------------------
 # Статические файлы и медиа (аватарки пользователей)
 # -----------------------------------------------------------------------
+<<<<<<< Updated upstream
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = 'media/'
+=======
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+MEDIA_URL = '/media/'
+>>>>>>> Stashed changes
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# CSRF для продакшена
+CSRF_TRUSTED_ORIGINS = [
+    'https://api.pygen.online',
+    'https://pygen.online',
+    'https://www.pygen.online',
+]
+
+# Куки через HTTPS
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

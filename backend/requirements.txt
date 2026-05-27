@@ -13,3 +13,4 @@ pytest
 pytest-django
 factory-boy
 faker
+gunicorn>=21.0
