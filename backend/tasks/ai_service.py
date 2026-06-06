@@ -1,5 +1,6 @@
 import json
 import logging
+import socket
 
 from django.conf import settings
 from openai import OpenAI
@@ -90,6 +91,16 @@ def generate_task_data(theme) -> dict | None:
     Генерирует задание через DeepSeek и валидирует его.
     Делает до 3 попыток. Возвращает dict или None при неудаче.
     """
+
+    try:
+        host = settings.DEEPSEEK_BASE_URL.replace('https://', '').split('/')[0]
+        sock = socket.create_connection((host, 443), timeout=3)
+        sock.close()
+        logger.info('ai_service: TCP соединение с API установлено')
+    except Exception as e:
+        logger.warning('ai_service: API недоступен (%s), fallback в пул', e)
+        return None
+
     client = _make_client()
     user_prompt = f"Сгенерируй задание по теме «{theme.title}». Описание: {theme.description}"
 
@@ -103,7 +114,7 @@ def generate_task_data(theme) -> dict | None:
                 ],
                 response_format={'type': 'json_object'},
                 temperature=0.8,
-                timeout=30,
+                timeout=25,
             )
             raw = response.choices[0].message.content
             data = json.loads(raw)
