@@ -92,7 +92,7 @@ def generate_task_data(theme) -> dict | None:
     Делает до 3 попыток. Возвращает dict или None при неудаче.
     """
 
-    try:
+try:
         host = settings.DEEPSEEK_BASE_URL.replace('https://', '').split('/')[0]
         sock = socket.create_connection((host, 443), timeout=3)
         sock.close()
@@ -100,7 +100,7 @@ def generate_task_data(theme) -> dict | None:
     except Exception as e:
         logger.warning('ai_service: API недоступен (%s), fallback в пул', e)
         return None
-
+ 
     client = _make_client()
     user_prompt = f"Сгенерируй задание по теме «{theme.title}». Описание: {theme.description}"
 
@@ -114,7 +114,7 @@ def generate_task_data(theme) -> dict | None:
                 ],
                 response_format={'type': 'json_object'},
                 temperature=0.8,
-                timeout=25,
+                timeout=30,
             )
             raw = response.choices[0].message.content
             data = json.loads(raw)
