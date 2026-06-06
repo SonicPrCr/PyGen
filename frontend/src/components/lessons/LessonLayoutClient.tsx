@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, BookOpen, FileText, Bookmark } from "lucide-react";
 import { Header } from "@/components/landing/Header";
 import { LessonSidebar } from "@/components/lessons/LessonSidebar";
@@ -21,9 +21,7 @@ const TAB_LABELS: Record<string, string> = {
 };
 
 export function LessonLayoutClient({ lessonId, children }: Props) {
-  const pathname = usePathname();
   const router = useRouter();
-  const isEditorPage = pathname.endsWith("/editor");
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [leftOpen, setLeftOpen] = useState(true);
@@ -43,16 +41,13 @@ export function LessonLayoutClient({ lessonId, children }: Props) {
     setPreviewLessonId(String(id));
     setActiveTab("lessons");
     setRightPanelOpen(true);
-    if (isEditorPage && type === "practice") {
-      router.push(`/lessons/${id}/editor`);
-    } else if (!isEditorPage && type === "theory") {
-      router.push(`/lessons/${id}`);
-    }
+    const url = type === "practice" ? `/lessons/${id}/editor` : `/lessons/${id}`;
+    router.push(url);
   };
 
   return (
     <div
-      className="min-h-screen flex flex-col"
+      className="h-screen flex flex-col overflow-hidden"
       style={{ backgroundColor: "var(--color-bg-primary)" }}
     >
       <Header
@@ -70,7 +65,7 @@ export function LessonLayoutClient({ lessonId, children }: Props) {
         }}
       />
 
-      <div className="flex flex-1 overflow-hidden" style={{ minHeight: 0 }}>
+      <div className="flex flex-1 overflow-hidden min-h-0">
 
         {/* ── Desktop sidebar (collapsible lg+) ────────────────── */}
         <aside
@@ -132,13 +127,13 @@ export function LessonLayoutClient({ lessonId, children }: Props) {
         )}
 
         {/* ── Main content ──────────────────────────────────────── */}
-        <main className="flex-1 overflow-y-auto flex flex-col">
+        <main className="flex-1 overflow-y-auto flex flex-col min-h-0">
           {children}
         </main>
 
         {/* ── Right panel (icon strip + expandable content) ──────── */}
         <aside
-          className="flex transition-all duration-200 overflow-hidden shrink-0"
+          className="flex transition-all duration-200 overflow-hidden shrink-0 min-h-0 self-stretch"
           style={{
             width: rightPanelOpen ? 380 : 60,
             borderLeft: "1px solid rgba(255,255,255,0.08)",
@@ -190,7 +185,7 @@ export function LessonLayoutClient({ lessonId, children }: Props) {
           {/* Expandable content panel */}
           {rightPanelOpen && (
             <div
-              className="flex flex-col overflow-hidden"
+              className="flex flex-1 flex-col overflow-hidden min-h-0"
               style={{
                 width: 320,
                 backgroundColor: "#303234",
@@ -207,7 +202,7 @@ export function LessonLayoutClient({ lessonId, children }: Props) {
               </div>
 
               {/* Panel content — panels manage their own scroll */}
-              <div className="flex-1 overflow-hidden flex flex-col">
+              <div className="flex-1 overflow-hidden flex flex-col min-h-0">
                 {activeTab === "lessons" && (
                   <LessonsPanel previewLessonId={previewLessonId} />
                 )}

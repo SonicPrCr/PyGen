@@ -42,6 +42,13 @@ const MENU_ITEMS = [
   },
 ];
 
+function getAvatarUrl(avatar: string | null | undefined): string | null {
+  if (!avatar) return null;
+  if (avatar.startsWith("http")) return avatar;
+  const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+  return `${base}${avatar}`;
+}
+
 // ─── Компонент ───────────────────────────────────────────────────────────────
 export function Header({
   showBurger = false,
@@ -141,13 +148,23 @@ export function Header({
                 className="w-10 h-10 rounded-full border-2 flex items-center justify-center overflow-hidden"
                 style={{ borderColor: "#FFFFFF", backgroundColor: "transparent" }}
               >
-                {user?.avatar ? (
-                  <img src={user.avatar} alt="avatar" className="w-full h-full object-cover rounded-full" />
-                ) : (
-                  <span className="text-white font-bold text-base leading-none">
-                    {avatarLetter}
-                  </span>
-                )}
+                {(() => {
+                  const avatarUrl = getAvatarUrl(user?.avatar);
+                  return avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt="avatar"
+                      className="w-full h-full object-cover rounded-full"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <span className="text-white font-bold text-base leading-none">
+                      {avatarLetter}
+                    </span>
+                  );
+                })()}
               </span>
               <img
                 src="/images/landing/chevron-down.svg"

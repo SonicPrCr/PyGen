@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { FileText, Code, Check, Lock } from "lucide-react";
@@ -116,6 +116,12 @@ function ThemeSection({
 }) {
   const [expanded, setExpanded] = useState(defaultExpanded);
 
+  useEffect(() => {
+    if (defaultExpanded) {
+      setExpanded(true);
+    }
+  }, [defaultExpanded]);
+
   const { data: themeDetail } = useQuery<ThemeDetail>({
     queryKey: ["theme", theme.id],
     queryFn: async () => {
@@ -133,12 +139,12 @@ function ThemeSection({
       <button
         onClick={() => setExpanded((e) => !e)}
         className="w-full flex items-center justify-between px-4 py-3 gap-2 transition-colors hover:bg-white/[0.04]"
-        style={{ borderLeft: `2px solid ${expanded ? "var(--color-accent-purple)" : "transparent"}` }}
+        style={{ borderLeft: `2px solid ${defaultExpanded ? "var(--color-accent-purple)" : "transparent"}` }}
       >
         <span
           className="text-[13px] font-bold leading-tight text-left truncate"
           style={{
-            color: theme.is_locked ? "rgba(255,255,255,0.3)" : expanded ? "#FFFFFF" : "rgba(255,255,255,0.5)",
+            color: theme.is_locked ? "rgba(255,255,255,0.3)" : defaultExpanded ? "#FFFFFF" : expanded ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.5)",
             fontFamily: "'Science Gothic', sans-serif",
             letterSpacing: "0.02em",
           }}

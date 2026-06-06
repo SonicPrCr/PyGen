@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { TipTapEditor } from "@/components/editor/TipTapEditor";
@@ -72,6 +72,11 @@ export function LessonsPanel({ previewLessonId }: Props) {
 
   const isPractice = previewLesson?.lesson_type === "practice";
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    scrollRef.current?.scrollTo(0, 0);
+  }, [previewLessonId]);
+
   const handleNextLesson = async () => {
     if (!nextLesson || isNavigating) return;
     setIsNavigating(true);
@@ -95,10 +100,10 @@ export function LessonsPanel({ previewLessonId }: Props) {
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex-1 flex flex-col overflow-hidden min-h-0">
 
       {/* ── Preview lesson content ──────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto min-h-0">
         {previewLoading ? (
           <div className="p-4 flex flex-col gap-3">
             {[1, 2, 3].map((i) => (
