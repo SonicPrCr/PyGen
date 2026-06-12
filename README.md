@@ -137,7 +137,7 @@ PyGen/
 ### Шаг 1 — Клонировать репозиторий
 
 ```bash
-git clone https://github.com/ТВО_ИМЯ/PyGen.git
+git clone git@github.com:SonicPrCr/PyGen.git
 cd PyGen
 ```
 
@@ -300,7 +300,7 @@ git config --global --add safe.directory /home/pygen/app/PyGen
 # Клонировать
 mkdir -p /home/pygen/app
 cd /home/pygen/app
-git clone https://github.com/ТВО_ИМЯ/PyGen.git PyGen
+git clone git@github.com:SonicPrCr/PyGen.git PyGen
 cd PyGen
 ```
 
