@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Btn } from "@/components/Btn";
 import { useAuthStore } from "@/lib/stores/authStore";
+import { getAvatarUrl } from "@/lib/avatar";
 
 // ─── Пункты дропдаун-меню ────────────────────────────────────────────────────
 const MENU_ITEMS = [
@@ -42,13 +43,6 @@ const MENU_ITEMS = [
   },
 ];
 
-function getAvatarUrl(avatar: string | null | undefined): string | null {
-  if (!avatar) return null;
-  if (avatar.startsWith("http")) return avatar;
-  const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-  return `${base}${avatar}`;
-}
-
 // ─── Компонент ───────────────────────────────────────────────────────────────
 export function Header({
   showBurger = false,
@@ -65,6 +59,7 @@ export function Header({
 }) {
   const { isAuthenticated, user, logout, openLogin, openRegister } = useAuthStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
@@ -72,6 +67,8 @@ export function Header({
     user?.first_name?.[0]?.toUpperCase() ||
     user?.email?.[0]?.toUpperCase() ||
     "U";
+
+  const avatarUrl = !avatarError ? getAvatarUrl(user?.avatar) : null;
 
   const menuItems = [
     ...MENU_ITEMS,
@@ -97,6 +94,10 @@ export function Header({
   useEffect(() => {
     setIsMenuOpen(false);
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [user?.avatar]);
 
   return (
     <div className="relative z-50">
@@ -148,23 +149,18 @@ export function Header({
                 className="w-10 h-10 rounded-full border-2 flex items-center justify-center overflow-hidden"
                 style={{ borderColor: "#FFFFFF", backgroundColor: "transparent" }}
               >
-                {(() => {
-                  const avatarUrl = getAvatarUrl(user?.avatar);
-                  return avatarUrl ? (
-                    <img
-                      src={avatarUrl}
-                      alt="avatar"
-                      className="w-full h-full object-cover rounded-full"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = "none";
-                      }}
-                    />
-                  ) : (
-                    <span className="text-white font-bold text-base leading-none">
-                      {avatarLetter}
-                    </span>
-                  );
-                })()}
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt="avatar"
+                    className="w-full h-full object-cover rounded-full"
+                    onError={() => setAvatarError(true)}
+                  />
+                ) : (
+                  <span className="text-white font-bold text-base leading-none">
+                    {avatarLetter}
+                  </span>
+                )}
               </span>
               <img
                 src="/images/landing/chevron-down.svg"

@@ -8,6 +8,7 @@ import { useLessonContext } from "@/lib/hooks/useLessonContext";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { usePyodide } from "@/lib/hooks/usePyodide";
 import { useAuthStore } from "@/lib/stores/authStore";
+import { normalizeAuthUser } from "@/lib/avatar";
 import { useEditorPanelStore } from "@/lib/stores/editorPanelStore";
 import api from "@/lib/api";
 
@@ -303,7 +304,7 @@ export default function LessonEditorPage() {
 
       if (allPassed) {
         const { data } = await api.post(`/api/lessons/${id}/complete/`, { stars_earned: 3 });
-        if (data.user) useAuthStore.setState({ user: data.user });
+        if (data.user) useAuthStore.setState({ user: normalizeAuthUser(data.user) });
         queryClient.invalidateQueries({ queryKey: ["lesson", id] });
         queryClient.invalidateQueries({ queryKey: ["theme", lesson.theme] });
         queryClient.invalidateQueries({ queryKey: ["themes"] });

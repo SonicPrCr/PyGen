@@ -9,6 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useLessonContext } from "@/lib/hooks/useLessonContext";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { useAuthStore } from "@/lib/stores/authStore";
+import { normalizeAuthUser } from "@/lib/avatar";
 import { useBookmarks } from "@/lib/hooks/useBookmarks";
 import { TipTapEditor } from "@/components/editor/TipTapEditor";
 import api from "@/lib/api";
@@ -181,7 +182,7 @@ export default function LessonTheoryPage() {
         const { data } = await api.post(`/api/lessons/${id}/complete/`, { stars_earned: 3 });
         // Update user in store with fresh data from server
         if (data.user) {
-          useAuthStore.setState({ user: data.user });
+          useAuthStore.setState({ user: normalizeAuthUser(data.user) });
         }
         // Invalidate queries so sidebar/theme pages refresh
         queryClient.invalidateQueries({ queryKey: ["lesson", id] });

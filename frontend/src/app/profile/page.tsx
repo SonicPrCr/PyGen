@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/landing/Header";
 import { Footer } from "@/components/landing/Footer";
 import { ThemeCard, type Theme } from "@/components/themes/ThemeCard";
 import { useAuthStore, type AuthUser } from "@/lib/stores/authStore";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
+import { getAvatarUrl, normalizeAuthUser } from "@/lib/avatar";
 import api from "@/lib/api";
 
 // ─── XP helpers ──────────────────────────────────────────────────────────────
@@ -37,7 +38,12 @@ function UserCard({ user, achievements }: { user: AuthUser; achievements: Achiev
 
   const [achExpanded, setAchExpanded] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [user.avatar]);
 
   const handleAvatarUpload = async (file: File) => {
     setIsUploading(true);
@@ -47,7 +53,7 @@ function UserCard({ user, achievements }: { user: AuthUser; achievements: Achiev
       const { data } = await api.patch("/api/auth/me/", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      useAuthStore.setState({ user: data });
+      useAuthStore.setState({ user: normalizeAuthUser(data) });
     } catch {
       // silent — avatar stays unchanged
     } finally {
@@ -59,6 +65,8 @@ function UserCard({ user, achievements }: { user: AuthUser; achievements: Achiev
     user.first_name?.[0]?.toUpperCase() ||
     user.email?.[0]?.toUpperCase() ||
     "U";
+
+  const avatarUrl = !avatarError ? getAvatarUrl(user.avatar) : null;
 
   const displayName =
     [user.first_name, user.last_name].filter(Boolean).join(" ") ||
@@ -86,8 +94,13 @@ function UserCard({ user, achievements }: { user: AuthUser; achievements: Achiev
           disabled={isUploading}
         >
           <div className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center" style={{ backgroundColor: "#FFFFFF" }}>
-            {user.avatar ? (
-              <img src={user.avatar} alt="avatar" className="w-full h-full object-cover" />
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt="avatar"
+                className="w-full h-full object-cover"
+                onError={() => setAvatarError(true)}
+              />
             ) : (
               <span className="text-3xl font-black text-[#0C0827]">{avatarLetter}</span>
             )}

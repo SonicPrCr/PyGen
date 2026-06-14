@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import api from "@/lib/api";
+import { normalizeAuthUser } from "@/lib/avatar";
 
 export interface AuthUser {
   id: number;
@@ -68,13 +69,13 @@ export const useAuthStore = create<AuthState>((set) => ({
   login: async (email, password) => {
     const { data } = await api.post("/api/auth/login/", { email, password });
     saveTokens(data.tokens.access, data.tokens.refresh);
-    set({ user: data.user, isAuthenticated: true, isInitialized: true });
+    set({ user: normalizeAuthUser(data.user), isAuthenticated: true, isInitialized: true });
   },
 
   register: async (payload) => {
     const { data } = await api.post("/api/auth/register/", payload);
     saveTokens(data.tokens.access, data.tokens.refresh);
-    set({ user: data.user, isAuthenticated: true, isInitialized: true });
+    set({ user: normalizeAuthUser(data.user), isAuthenticated: true, isInitialized: true });
   },
 
   logout: () => {
@@ -91,7 +92,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true });
     try {
       const { data } = await api.get("/api/auth/me/");
-      set({ user: data, isAuthenticated: true });
+      set({ user: normalizeAuthUser(data), isAuthenticated: true });
     } catch {
       clearTokens();
       set({ user: null, isAuthenticated: false });

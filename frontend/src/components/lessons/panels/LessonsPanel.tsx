@@ -7,6 +7,7 @@ import { TipTapEditor } from "@/components/editor/TipTapEditor";
 import { useLessonContext, type LessonDetail } from "@/lib/hooks/useLessonContext";
 import { useEditorPanelStore } from "@/lib/stores/editorPanelStore";
 import { useAuthStore } from "@/lib/stores/authStore";
+import { normalizeAuthUser } from "@/lib/avatar";
 import api from "@/lib/api";
 
 function formatCountdown(seconds: number): string {
@@ -83,7 +84,7 @@ export function LessonsPanel({ previewLessonId }: Props) {
     try {
       if (previewLesson && !previewLesson.is_completed) {
         const { data } = await api.post(`/api/lessons/${previewLessonId}/complete/`, { stars_earned: 3 });
-        if (data.user) useAuthStore.setState({ user: data.user });
+        if (data.user) useAuthStore.setState({ user: normalizeAuthUser(data.user) });
         queryClient.invalidateQueries({ queryKey: ["lesson", previewLessonId] });
         queryClient.invalidateQueries({ queryKey: ["theme", previewLesson.theme] });
         queryClient.invalidateQueries({ queryKey: ["themes"] });
